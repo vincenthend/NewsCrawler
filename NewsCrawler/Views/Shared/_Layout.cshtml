@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsCrawler</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+
+        <form method="get" class="web-form" action="~/Search/">
+            <a href="~/"><div class="web-logo"></div></a>
+            <div class="web-search-bar">
+                <input type="text" name="searchQuery" class="form-textbox" required>
+                <button type="submit" class="form-btn btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
+                <div class="web-search-option">
+                    <label class="radio-inline"><input type="radio" name="searchType" value=0 checked />Boyer-Moore</label>
+                    <label class="radio-inline"><input type="radio" name="searchType" value=1 />KMP</label>
+                    <label class="radio-inline"><input type="radio" name="searchType" value=2 />Regex</label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <center>
+                <p>&copy; @DateTime.Now.Year - NewsCrawler</p>
+                <p>@Html.ActionLink("About","About","Home")</p>
+            </center>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

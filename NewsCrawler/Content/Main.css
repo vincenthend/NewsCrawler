@@ -1,0 +1,80 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 150px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.web-logo {
+    width: 150px;
+    height: 50px;
+    background-color: black;
+    display: block;
+    padding: 40px 60px 40px 60px;
+    background-image: url("../image/logobig.png");
+    margin: 0 auto;
+    margin-bottom: 35px;
+}
+
+.web-search-bar > .form-textbox {
+    display: inline-block;
+    border-radius: 0px;
+    border: 1px solid #dcdcdc;
+    min-width: 45%;
+    max-width: 80%;
+    height: 44px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding-left: 5px;
+}
+
+.web-search-bar > .form-btn {
+    display: inline-block;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border: none;
+    height: 44px;
+    width:60px;
+    margin-bottom: 2px;
+    margin-left: -4px;
+}
+
+.web-search-option {
+    padding-top: 5px;
+}
+
+.web-form {
+    margin-bottom: -15px;
+}
+
+.web-search-bar {
+    margin-left: 10px;
+    display: inline;
+}
+
+hr {
+    width: auto;
+}
+
+footer {
+    margin-bottom: 0px;
+}

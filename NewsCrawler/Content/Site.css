@@ -1,0 +1,139 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.navbar {
+    text-align: center;
+    padding-bottom:5px;
+}
+
+.web-logo {
+    width: 150px;
+    height: 50px;
+    background-color: white;
+    display: block;
+    padding:20px 30px 20px 30px;
+    background-image: url("../image/logo.png");
+}
+
+.web-search-bar > .form-textbox {
+    display: inline-block;
+    border-radius: 0px;
+    border: none;
+    min-width: 30%;
+    max-width: 60%;
+    height: 36px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding-left:5px;
+}
+
+.web-search-bar > .form-btn {
+    display: inline-block;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border: 0px;
+    height: 36px;
+    margin-bottom: 2px;
+    margin-left: -4px;
+}
+
+.web-search-option{
+    color:#dcdcdc;
+    padding-top:5px;
+}
+
+.web-form{
+    margin-bottom:-15px;
+
+}
+
+/* for phone */
+@media screen and (max-width:768px) and (min-width:380px) {
+    .navbar {
+        padding-top: 5px;
+    }
+
+    .web-logo {
+        display:inline;
+    }
+
+    .web-search-bar {
+        margin-left: 10px;
+        display: inline;
+    }
+
+    .web-search-option{
+        width:inherit;
+        margin-left:20%;
+    }
+}
+
+/* for PC */
+@media not screen and (max-width:768px) {
+    .navbar {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    .web-logo {
+        margin: 0 auto;
+        margin-bottom: 5px;
+    }
+
+    .web-search-bar {
+        margin-left: 10px;
+        display: inline;
+    }
+
+    .body-content {
+        margin-top: 100px;
+    }
+}
+
+/* for small phones */
+@media screen and (max-width:380px) {
+    .navbar {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    .web-logo {
+        margin: 0 auto;
+        margin-bottom: 5px;
+    }
+
+    .web-search-bar {
+        margin-left: 10px;
+        display: inline;
+    }
+
+    .body-content {
+        margin-top: 80px;
+    }
+}
+
+.resultInfo{
+    color:#808080;
+}
