@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewsCrawler</title>
+    <title>Negator - News Aggregator</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 </head>
@@ -11,7 +11,7 @@
     <div class="navbar navbar-inverse navbar-fixed-top">
 
         <form method="get" class="web-form" action="~/Search/">
-            <a href="~/"><div class="web-logo"></div></a>
+                <a href="~/"><div class="web-logo"></div></a>
             <div class="web-search-bar">
                 <input type="text" name="searchQuery" class="form-textbox" value=@ViewBag.SearchQuery required>
                 <button type="submit" class="form-btn btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
@@ -25,8 +25,9 @@
     </div>
     <div class="container body-content">
         @RenderBody()
-        <hr />
         <footer>
+
+            <hr />
             <center>
                 <p>&copy; @DateTime.Now.Year - NewsCrawler</p>
                 <p>@Html.ActionLink("About","About","Home")</p>

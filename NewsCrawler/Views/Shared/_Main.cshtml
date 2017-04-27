@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewsCrawler</title>
+    <title>Negator - News Aggregator</title>
     @Styles.Render("~/Content/cssmain")
     @Scripts.Render("~/bundles/modernizr")
 </head>
@@ -25,8 +25,8 @@
             </form>
         </center>
         @RenderBody()
-        <hr />
         <footer>
+            <hr />
             <center>
                 <p>&copy; @DateTime.Now.Year - NewsCrawler</p>
                 <p>@Html.ActionLink("About", "About", "Home")</p>

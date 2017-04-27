@@ -29,11 +29,14 @@ textarea {
 }
 
 .web-logo {
+    width: 180px;
+    height: 100px;
     display: block;
-    padding:20px 30px 20px 30px;
+    padding:30px 45px 0px 45px;
     background-image: url("../image/logo_white.png");
     background-repeat:no-repeat;
-    background-size:cover;
+    background-size:contain;
+    margin: 0 auto;
 }
 
 .web-search-bar > .form-textbox {
@@ -67,26 +70,6 @@ textarea {
     margin-bottom:-10px;
 }
 
-/* for phone */
-@media screen and (max-width:768px) and (min-width:380px) {
-    .navbar {
-        padding-top: 5px;
-    }
-
-    .web-logo {
-        display:inline;
-    }
-
-    .web-search-bar {
-        margin-left: 10px;
-        display: inline;
-    }
-
-    .web-search-option{
-        width:inherit;
-        margin-left:20%;
-    }
-}
 
 /* for PC */
 @media not screen and (max-width:768px) {
@@ -106,7 +89,7 @@ textarea {
     }
 
     .body-content {
-        margin-top: 100px;
+        margin-top: 150px;
     }
 }
 
@@ -128,7 +111,7 @@ textarea {
     }
 
     .body-content {
-        margin-top: 100px;
+        margin-top: 150px;
     }
 }
 
