@@ -208,9 +208,9 @@ namespace NewsCrawler.Controllers {
       //Combine regex
       regexConcat = regexList[0];
       for (i = 1; i < regexList.Length; i++) {
-        regexConcat = "(?i:"+regexConcat + "|" + regexList[i] + ")";
+        regexConcat = regexConcat + "|" + regexList[i];
       }
-
+      regexConcat = "(?i:" + regexConcat + ")";
       return regexConcat;
     }
 

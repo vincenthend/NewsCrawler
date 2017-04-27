@@ -198,12 +198,12 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\RssLoader.cs" />
     <Compile Include="Controllers\Searcher.cs" />
     <Compile Include="Controllers\SearchController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\DbInitializer.cs" />
     <Compile Include="Models\NewsDB.cs" />
     <Compile Include="Models\NewsFound.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

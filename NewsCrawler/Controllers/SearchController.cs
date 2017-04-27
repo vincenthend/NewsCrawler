@@ -20,6 +20,7 @@ namespace NewsCrawler.Controllers {
     * @return List berita yang lolos search dengan lokasi ditemukannya
     */
     public ActionResult Index(string searchQuery, int searchType) {
+      int i;
       DbConfiguration.SetConfiguration(new MySqlEFConfiguration());
       String connectionString = "server=127.0.0.1;User Id=root;password=password;database=db_newscrawler";
       MySqlConnection connection = new MySqlConnection(connectionString);
@@ -30,7 +31,16 @@ namespace NewsCrawler.Controllers {
       connection.Open();
 
       // Check meta, update if last update > 1 hours
+      RSSData[] rssArray = dbNews.rssDB.SqlQuery("select * from rssdata").ToArray();
 
+      for (i = 0; i < rssArray.Length; i++) {
+        Loader.loadRSS(rssArray[i].url, dbNews, connection);
+      }
+
+      // Empty tables
+      dbNews.News.SqlQuery("delete * from News");
+
+      // Get data from RSS
 
       // Convert news list to array
       News[] newsArray = dbNews.News.SqlQuery("select * from News").ToArray();
@@ -51,6 +61,7 @@ namespace NewsCrawler.Controllers {
         newsFound = showAll(newsArray);
       }
 
+      ViewBag.regexQuery = Searcher.regexConvert(searchQuery);
       ViewBag.searchQuery = searchQuery;
       ViewBag.searchType = searchType;
       ViewBag.searchResult = newsFound;
