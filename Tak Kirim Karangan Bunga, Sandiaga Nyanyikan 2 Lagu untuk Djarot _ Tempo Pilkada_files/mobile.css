@@ -1,0 +1,95 @@
+@media screen and (max-width:800px){
+/*hidden desktop*/
+.header-outside{display:none; visibility:hidden;}
+.flexslider .slides > li .slide-left{width:100%; padding-right:0; margin-bottom:15px;}
+.flexslider .slides > li .slide-right{width:100%; float:none; padding:0;}
+#left-layout{width:48%; margin-right:4%; float:left;}
+#right-layout{width:48%; float:left;}
+.left-side{width:100%;}
+ul.terbaru li .block-img, .flexslider .slides > li .box-teks p, .flex-direction-nav{display:none; visibility:hidden;}
+.flexslider .slides > li .box-teks h1 {font-size:20px;line-height: 24px;}
+.right-side{width:100%;}
+.spot-banner-right{padding:0; box-shadow:none;}
+.flex-control-nav{bottom:0; right:0;}
+.flexslider .slides > li .box-teks h2 {font-size:13px; line-height:18px;}
+.flexslider .slides > li .box-thumb .box-teks{position:relative; background:transparent; padding:10px 0;}
+ul.img-baru li{width:100%;}
+.kanalisasi-left{width:100%; float:none;min-height:30px;}
+.kanalisasi-center{width:100%; padding:0; min-height:30px;}
+.kanalisasi-right{width:100%; float:none;min-height:30px;}
+/*mobile-menu*/
+.snap-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  z-index: 2;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  -webkit-transform: translate3d(0, 0, 0);
+     -moz-transform: translate3d(0, 0, 0);
+      -ms-transform: translate3d(0, 0, 0);
+       -o-transform: translate3d(0, 0, 0);
+          transform: translate3d(0, 0, 0);
+}
+.snap-drawers {position: absolute;  top: 0;  right: 0;  bottom: 0;  left: 0;  width: auto;  height: auto; display:block; visibility:visible;}
+.snap-drawer {
+  position: absolute;
+  top: 0;
+  right: auto;
+  bottom: 0;
+  left: auto;
+  width: 265px;
+  height: auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  -webkit-transition: width 0.3s ease;
+     -moz-transition: width 0.3s ease;
+      -ms-transition: width 0.3s ease;
+       -o-transition: width 0.3s ease;
+          transition: width 0.3s ease;
+}
+.snap-drawer-left {  left: 0;  z-index: 1;}
+.snap-drawer-right {  right: 0;  z-index: 1;}
+.snapjs-left .snap-drawer-right,.snapjs-right .snap-drawer-left {  display: none;}
+.snapjs-expand-left .snap-drawer-left, .snapjs-expand-right .snap-drawer-right {  width: 100%;}
+.snapjs-right .snap-drawer-left {	display: block;	right: 0;	left: auto;}
+.snapjs-right .snap-drawer-right {	display: none;}
+#content {	background: #fff;}
+#toolbar {  background: #fb9401;  position: absolute;  top: 0;  right: 0;  left: 0;  width: auto;  height: 44px;  z-index:12;  display:block; visibility:visible;}
+#toolbar h1 {  color: #fff;  font-size: 16px;  line-height: 22px;  text-align: center;  position: absolute;  top: 0;  right: 44px;  left: 44px;  width: auto;  height: 44px;}
+/*#toolbar .logomobile{position:absolute; height:44px; z-index:13; width:141px; background: url(../images/icon-pilkada.png) top no-repeat;  background-position:0px -135px; margin:0 auto;}*/
+#toolbar .logomobile{position:absolute; width:200px; background: url(https://cdn.tmpo.co/web/teco/pilkada/images/logo-2017.png) top no-repeat; background-position:0px -8px; margin:0 auto;}
+#open-left {  background: url(../images/icon-pilkada.png) top no-repeat;  background-position:-276px -82px;  display: block;  width: 44px;  height: 44px;}
+.search-right {background: url(../images/icon-pilkada.png) top no-repeat;  background-position:-179px -52px; display: block;	width: 42px;	height: 42px;	position: absolute;	top: 0;	right: 5px;}
+#toolbar .search-mobile{height:42px; overflow:hidden;position:absolute; top:44px; left:0; width:100%; z-index:999; background: rgba(221,221,221,0.8); padding:0 15px; margin:0 auto; text-align:center;}
+/* Default demo styles */
+.snap-content {background: #fff;}
+.snap-drawers {background: #fff;}
+.snap-drawer {background: #fff; box-shadow: inset 1px 1px 11px rgba(0,0,0,0.3)}
+ul.menu-mobile{display:block;font-family:'Roboto Condensed',Arial, Helvetica, sans-serif;}
+ul.menu-mobile li a{padding:15px; overflow:hidden; display:block; font-size:16px;  font-weight:600; border-bottom:1px solid #ddd;}
+ul.menu-mobile li a:hover{background:#ddd;}
+ul.menu-mobile li.selected a{background:#eee; color:#fb9401;}
+h2.title-kanal .tab-comment .fb{background: url(../images/icon-pilkada.png) no-repeat; background-position:-288px 0px; width:32px;}
+h2.title-kanal .tab-comment .tid{background: url(../images/icon-pilkada.png) no-repeat; background-position:-256px 0px; width:32px; right:32px;}
+.share-konten{height:auto;}
+.share-konten .title{float:none;}
+ul.share-big li{float:left; width:20%;}
+ul.share-big li .med-name, ul.share-left li .med-name{font-size:11px;}
+ul.share-big li .angka, ul.share-left li .angka {font-size:13px;}
+#clean-box{padding:0;box-shadow: none;}
+.block-artikel{box-shadow:none; margin:0;}
+.p-artikel{padding:15px 0;}
+.w50-left{width:100%; float:none; padding-right:0; display:block; overflow:hidden;}
+.w50-right{width:100%; float:none; padding-left:0;}
+ul.topik-terkait{margin-bottom:15px; overflow:hidden;}
+.terbaru-left, .terbaru-right{width:100%; float:none; padding:0;}
+ul.terbaru li .block-text{min-height:50px;}
+ul.terbaru li.formobile{margin-top:15px;}
+.block-artikel .block-galeri ul.thumb-galeri li{float:left; width:33.33%;}
+#open-twitter {display: block;  width: 44px;  height: 44px; position:absolute; right:0; top:0;}
+}

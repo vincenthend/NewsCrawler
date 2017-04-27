@@ -1,0 +1,750 @@
+$(document).ready(function() {
+	$('.viewport-share').lazyload({
+		threshold: 10,
+		load: function(element) {
+			console.log('lazy load count social media share active');
+			// Count share facebook
+			facebook_share_count(window.location.href, function(res) {
+				$('.angka-fb').html(res);
+			});
+			// Count share twitter
+			twitter_share_count(window.location.href, function(res) {
+				$('.angka-twitter').html(res);
+			});
+			// Facebook like
+			facebook_like_count(window.location.href, function(res) {
+				$('.angka-like').html(res);
+			});
+			// Pin Count
+			pin_count(window.location.href, function(res) {
+				$('.angka-pin').html(res);
+			});
+			// Google Count
+			google_count(window.location.href, function(res) {
+				$('.angka-google').html(res);
+			});
+		},
+		trigger: "appear"
+	});
+});
+// Popup center screen
+function popupwindow(url, title, w, h) {
+	var left = (screen.width/2)-(w/2);
+	var top = (screen.height/2)-(h/2);
+	return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+} 
+$('.sendComment').click(function() {
+	all_no_border();
+	$(this).hide();
+	// Check token
+	var tempoToken = docCookies.getItem('tempoToken');
+	if(tempoToken === null || tempoToken == '') { // Jika blm ada token
+		if($('.inputUsername').length == 0) { // Jika form tidak ada
+			$('.auth-komentar').html('');
+			$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+										'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+										'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+									'</div>');
+			// Top login
+			$('.top-space-login').html('');
+			$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+			loginTop();
+			$('.sendComment').show();
+		} else { // Jika ada form login maka cek login
+			var username = $('.inputUsername').val();
+			var password = $('.inputPassword').val();
+			// Check login
+			$.ajax({
+				type: "POST",
+				url: "/rest/auth/sso.json",
+				dataType: "JSON",
+				data:{"usr":username,"pass":password},
+				beforeSend: function(a) {
+					a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+				},
+				success: function(e) {
+					if(typeof e.token !== "undefined") { // Jika login sukses
+						token = e.token;
+						docCookies.setItem("tempoToken", e.token, "31536e3", "/", ".tempo.co");
+						// Dapatkan Nama
+						$.ajax({
+							type: "POST",
+							url: "/rest/auth/sso.json",
+							dataType: "JSON",
+							data:{"token":e.token},
+							beforeSend: function(a) {
+								a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+							},
+							success: function(e) {
+								if(typeof e.email !== undefined) { // Jika berhasil dapatkan nama
+									$('.auth-komentar').html('');
+									$('.auth-komentar').html('<div class="block-profil">' +
+																'<div class="nama-profil"><a href="#" title="' + e.nama_depan + '">' + e.nama_depan + '</a></div>' +
+																'<ul class="profil-link">' +
+																	'<li><a target="_blank" href="http://langganan.tempo.co/profil?email=' + e.email + '">Edit Profil</a></li>' +
+																	'<li><a target="_blank" href="http://indonesiana.tempo.co/' + e.username + '">Profil Indonesiana</a></li>' +
+																	'<li><a target="_blank" href="http://indonesiana.tempo.co/create_text">Tulis Indonesiana</a></li>' +
+																	'<li><a href="#" class="logoutComment">Keluar</a></li>' +
+																'</ul>' +
+															'</div>');
+									buttonLogout();
+									$('.top-space-login').html('');
+									$('.top-space-login').html('<ul>' +
+																	'<li>' + e.nama_depan +
+																		'<ul>' +
+																			'<li style="height: 10px;"><a href="http://langganan.tempo.co/profil?email=' + e.email + '">Profil</a></li>' +
+																			'<li style="height: 10px; padding-bottom: 20px;"><a href="#" class="buttonTopLogout">Logout</a></li>' +
+																		'</ul>' +
+																	'</li>');
+									buttonLogoutTop();
+									// Cek apakah form isi komentar kosong
+									var text_komentar = $('.komen-input').val();
+									var hdType = $('.hdkomentarType').val();
+									var hdId = $('.hdkomentarId').val();
+									var hdMod = $('.hdkomentarMod').val();
+									if(text_komentar == '') { // Jika Komentar kosong
+										text_border_red();
+										$('.sendComment').show();
+									} else { // Jika komentar terisi maka post komentar
+										var dataPostKomentar = {};
+										dataPostKomentar[hdType] = hdId;
+										dataPostKomentar["token"] = token;
+										dataPostKomentar["komentar"] = text_komentar;
+										if(hdMod != '') {
+											dataPostKomentar["mod"] = hdMod;
+										}
+										$.ajax({
+											type: "POST",
+											url: "/rest/berita/komentar.json",
+											dataType: "JSON",
+											data:dataPostKomentar,
+											beforeSend: function(a) {
+												a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+											},
+											success: function(re) {
+												if(typeof re.inserted !== "undefined") {
+													$('.list-komentar').prepend('<li><div class="block-komentator"><div class="nama"><a href="#">' + e.nama_depan + '</a></div><div class="tanggal">' + re.inserted + '</div></div><p style="margin-left:0px" class="isi">' + text_komentar + '</p></li>');
+												}
+												$('.komen-input').val('');
+												var kc = $('.komentarCount').html();
+												var kc= kc.replace("(", "");
+												var kc= kc.replace(")", "");
+												var kc = parseInt(kc);
+												$('.komentarCount').html('(' + (kc+1) + ')');
+											}
+										});
+									}
+								} else { // Jika gagal dapatkan nama
+									$('.auth-komentar').html('');
+									$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+																'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+																'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+															'</div>');
+									// Top login
+									$('.top-space-login').html('');
+									$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+									$('.sendComment').show();
+									loginTop();
+								}
+							}
+						});
+					} else { // Jika login gagal
+						login_border_red();
+						$('.sendComment').show();
+					}
+				}
+			});
+		}
+	} else { // Jika sudah ada token maka cek keabsahan token
+		$.ajax({
+			type: "POST",
+			url: "/rest/auth/sso.json",
+			dataType: "JSON",
+			data:{"token":tempoToken},
+			beforeSend: function(a) {
+				a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+			},
+			success: function(e) {
+				if(typeof e.email !== undefined) { // Jika token valid
+					// Dapatkan Nama
+					$.ajax({
+						type: "POST",
+						url: "/rest/auth/sso.json",
+						dataType: "JSON",
+						data:{"token":tempoToken},
+						beforeSend: function(a) {
+							a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+						},
+						success: function(e) {
+							if(typeof e.email !== undefined) { // Jika berhasil dapatkan nama
+								$('.auth-komentar').html('');
+								$('.auth-komentar').html('<div class="block-profil">' +
+															'<div class="nama-profil"><a href="#" title="' + e.nama_depan + '">' + e.nama_depan + '</a></div>' +
+															'<ul class="profil-link">' +
+																'<li><a target="_blank" href="http://langganan.tempo.co/profil?email=' + e.email + '">Edit Profil</a></li>' +
+																'<li><a target="_blank" href="http://indonesiana.tempo.co/' + e.username + '">Profil Indonesiana</a></li>' +
+																'<li><a target="_blank" href="http://indonesiana.tempo.co/create_text">Tulis Indonesiana</a></li>' +
+																'<li><a href="#" class="logoutComment">Keluar</a></li>' +
+															'</ul>' +
+														'</div>');
+								buttonLogout();
+								$('.top-space-login').html('');
+								$('.top-space-login').html('<ul>' +
+																'<li>' + e.nama_depan +
+																	'<ul>' +
+																		'<li style="height: 10px;"><a href="http://langganan.tempo.co/profil?email=' + e.email + '">Profil</a></li>' +
+																		'<li style="height: 10px; padding-bottom: 20px;"><a href="#" class="buttonTopLogout">Logout</a></li>' +
+																	'</ul>' +
+																'</li>');
+								buttonLogoutTop();
+								// Cek apakah form isi komentar kosong
+								var text_komentar = $('.komen-input').val();
+								var hdType = $('.hdkomentarType').val();
+								var hdId = $('.hdkomentarId').val();
+								var hdMod = $('.hdkomentarMod').val();
+								if(text_komentar == '') { // Jika Komentar kosong
+									text_border_red();
+									$('.sendComment').show();
+								} else { // Jika komentar terisi maka post komentar
+									var dataPostKomentar = {};
+									dataPostKomentar[hdType] = hdId;
+									dataPostKomentar["token"] = tempoToken;
+									dataPostKomentar["komentar"] = text_komentar;
+									if(hdMod != '') {
+										dataPostKomentar["mod"] = hdMod;
+									}
+									$.ajax({
+										type: "POST",
+										url: "/rest/berita/komentar.json",
+										dataType: "JSON",
+										data:dataPostKomentar,
+										beforeSend: function(a) {
+											a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+										},
+										success: function(re) {
+											if(typeof re.inserted !== "undefined") {
+												$('.list-komentar').prepend('<li><div class="block-komentator"><div class="nama"><a href="#">' + e.nama_depan + '</a></div><div class="tanggal">' + re.inserted + '</div></div><p style="margin-left:0px" class="isi">' + text_komentar + '</p></li>');
+											}
+											$('.komen-input').val('');
+											var kc = $('.komentarCount').html();
+											var kc= kc.replace("(", "");
+											var kc= kc.replace(")", "");
+											var kc = parseInt(kc);
+											$('.komentarCount').html('(' + (kc+1) + ')');
+											$('.sendComment').show();
+										}
+									});
+								}
+							} else { // Jika gagal dapatkan nama
+								$('.auth-komentar').html('');
+								$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+															'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+															'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+														'</div>');
+								// Top login
+								$('.top-space-login').html('');
+								$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+								$('.sendComment').show();
+								loginTop();
+							}
+						}
+					});
+					
+					
+					
+				} else { // Jika token invalid
+					// Tampilkan semua form login
+					$('.auth-komentar').html('');
+					$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+												'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+												'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+											'</div>');
+					// Top login
+					$('.top-space-login').html('');
+					$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+					$('.sendComment').show();
+					loginTop();
+				}
+			}
+		});
+	}
+})
+function login_border_red() {
+	$('.inputUsername').css('border-color','red');
+	$('.inputPassword').css('border-color','red');
+}
+function all_no_border() {
+	$('.inputUsername').css('border-color','');
+	$('.inputPassword').css('border-color','');
+	$('.komen-input').css('border-color','');
+}
+function text_border_red() {
+	$('.komen-input').css('border-color','red');
+}
+// Fungsi untuk cek login
+function checkLogin() {
+	var tempoToken = docCookies.getItem('tempoToken');
+	if(tempoToken === null || tempoToken == '') { // Jika blm login
+		$('.auth-komentar').html('');
+		$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+									'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+									'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+								'</div>');
+		// Top login
+		$('.top-space-login').html('');
+		$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+		loginTop();
+	} else { // Jika sudah login
+		getName(tempoToken);
+	}
+}
+// Fungsi untuk mendapatkan nama berdasarkan token
+function getName(token) {
+	$.ajax({
+		type: "POST",
+		url: "/rest/auth/sso.json",
+		dataType: "JSON",
+		data:{"token":token},
+		beforeSend: function(a) {
+			a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+		},
+		success: function(e) {
+			if(typeof e.email !== undefined) {
+				$('.auth-komentar').html('');
+				$('.auth-komentar').html('<div class="block-profil">' +
+											'<div class="nama-profil"><a href="#" title="' + e.nama_depan + '">' + e.nama_depan + '</a></div>' +
+											'<ul class="profil-link">' +
+												'<li><a target="_blank" href="http://langganan.tempo.co/profil?email=' + e.email + '">Edit Profil</a></li>' +
+												'<li><a target="_blank" href="http://indonesiana.tempo.co/' + e.username + '">Profil Indonesiana</a></li>' +
+												'<li><a target="_blank" href="http://indonesiana.tempo.co/create_text">Tulis Indonesiana</a></li>' +
+												'<li><a href="#" class="logoutComment">Keluar</a></li>' +
+											'</ul>' +
+										'</div>');
+				buttonLogout();
+				$('.top-space-login').html('');
+				$('.top-space-login').html('<ul>' +
+												'<li>' + e.nama_depan +
+													'<ul>' +
+														'<li style="height: 10px;"><a href="http://langganan.tempo.co/profil?email=' + e.email + '">Profil</a></li>' +
+														'<li style="height: 10px; padding-bottom: 20px;"><a href="#" class="buttonTopLogout">Logout</a></li>' +
+													'</ul>' +
+												'</li>');
+				buttonLogoutTop();
+			} else {
+				$('.auth-komentar').html('');
+				$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+											'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+											'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+										'</div>');
+				// Top login
+				$('.top-space-login').html('');
+				$('.top-space-login').html('<ul>' +
+											'<li><span class="user-login"></span>Login' +
+												'<ul>' +
+													'<li>' +
+														'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+														'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+														'<button class="login-button loginTop">Login!</button>' +
+													'</li>' +
+												'</ul>' +
+											'</li>' +
+											'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+				loginTop();
+			}
+		}
+	});
+}
+// Twitter share count
+function twitter_share_count(url, callBack) {
+	$.ajax({
+		type: "GET",
+		url: "https://cdn.api.twitter.com/1/urls/count.json?url=" + url,
+		dataType: "jsonp",
+		xhrFields: {
+			withCredentials: true
+		},
+		success: function(data) {
+			console.log('twittershare '+JSON.stringify(data));
+			if(typeof data.count !== "undefined") {
+				var str = data.count;
+				if(str > 999) {
+					str = str.toString();
+					var res = str.substring(0, (str.length - 3));
+					callBack(res + ".K");
+				} else {
+					callBack(str);
+				}
+			} else {
+			console.log('twittershare gagal');
+				return callBack(0);
+			}
+		}
+	});
+}
+// Facebook share count
+function facebook_share_count(url, callBack) {
+	console.log('facebook_share_count start!');
+	$.ajax({
+		type: "GET",
+		url: "https://graph.facebook.com/?id=" + url,
+		dataType: "jsonp",
+		xhrFields: {
+			withCredentials: true
+		},
+		success: function(data) {
+			//console.log('testshare2 '+JSON.stringify(data.share.share_count));
+			if(typeof data.share.share_count !== "undefined") {
+				var str = data.share.share_count;
+				if(str > 999) {
+					str = str.toString();
+					var res = str.substring(0, (str.length - 3));
+					callBack(res + ".K");
+				} else {
+					callBack(str);
+				}
+			} else {
+				return callBack(0);
+				//alert(callBack(0));
+			}
+		}
+	});
+}
+// Facebook like count
+function facebook_like_count(url, callBack) {
+	$.ajax({
+		type: "GET",
+		url: "https://graph.facebook.com/?id=" + url,
+		//url: 'https://graph.facebook.com/' + url + '/feed?fields=message,comments.limit(10).summary(true){message,from,likes.limit(0).summary(true)}',
+		dataType: "jsonp",
+		xhrFields: {
+			withCredentials: true
+		},
+		success: function(data) {
+			
+			if(typeof data.share.share_count !== "undefined") {
+				var str = data.share.share_count;
+				if(str > 999) {
+					str = str.toString();
+					var res = str.substring(0, (str.length - 3));
+					callBack(res + ".K");
+				} else {
+					callBack(str);
+				}
+			} else {
+				return callBack(0);
+			}
+		}
+	});
+}
+// Pinterest pin count
+function pin_count(url, callBack) {
+	$.ajax({
+		type: "GET",
+		url: 'http://api.pinterest.com/v1/urls/count.json?callback=pinCount&url='+url,
+		dataType: "jsonp",
+		jsonp: "callback",
+		xhrFields: {
+			withCredentials: true
+		},
+		success: function(data) {
+			console.log('testshare2 '+JSON.stringify(data));
+			//alert(data);
+			if(typeof data.count !== "undefined") {
+				var str = data.count;
+				if(str > 999) {
+					str = str.toString();
+					var res = str.substring(0, (str.length - 3));
+					callBack(res + ".K");
+				} else {
+					callBack(str);
+				}
+			} else {
+				return callBack(0);
+			}
+		}
+	});
+}
+
+// Google plus count
+function google_count(url, callBack) {
+	var params = {
+	  nolog: true,
+	  id: url,
+	  source: "widget",
+	  userId: "@viewer",
+	  groupId: "@self"
+	};
+
+	gapi.client.setApiKey('AIzaSyCKSbrvQasunBoV16zDH9R33D88CeLr9gQ');
+	gapi.client.rpcRequest('pos.plusones.get', 'v1', params).execute(function(resp) {
+	  
+	  console.log('count:', resp.result.metadata.globalCounts.count);
+
+	  if(typeof resp.result.metadata.globalCounts.count !== "undefined") {
+			var str = resp.result.metadata.globalCounts.count;
+			if(str > 999) {
+				str = str.toString();
+				var res = str.substring(0, (str.length - 3));
+				callBack(res + ".K");
+			} else {
+				callBack(str);
+			}
+		} else {
+			return callBack(0);
+		}
+	
+	});
+
+}
+
+// Fungsi untuk logout
+function logout(token) {
+	$.ajax({
+		type: "POST",
+		url: "/rest/auth/sso.json?token=" + token,
+		dataType: "JSON",
+		beforeSend: function(a) {
+			a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+		},
+		success: function(e) {
+			docCookies.removeItem('tempoToken','/','.tempo.co');
+			checkLogin();
+		}
+	});
+}
+// Fungsi untuk ajax komentar
+function get_komentar(idnews, page, mod) {
+	if(typeof mod === "undefined") {
+		mod = '';
+	}
+	// Mengambil komentar
+	$.ajax({
+		type: "GET",
+		url: "/rest/berita/komentar.json?idnews=" + idnews + "&page=" + page + mod,
+		dataType: "JSON",
+		beforeSend: function(a) {
+			a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+		},
+		success: function(e) {
+			if(typeof e.data !== undefined) {
+				var list_komentar = '';
+				$.each(e.data, function( key, value ) {
+					list_komentar += 	'<li>' +
+											'<div class="block-komentator">' +
+												'<div class="nama"><a href="#">' + value.nama + '</a></div>' +
+												'<div class="tanggal">' + value.updated + '</div>' +
+											'</div>' +
+											'<p style="margin-left:0px" class="isi">' + value.komentar + '</p>' +
+										'</li>';
+				});
+				$('.list-komentar').append(list_komentar);
+				if(e.total_page > page) {
+					$('.hal-komentar').html('<ul class="pagination-nb tengah"> <li><a href="#" class="fade loadMoreKomentar" news_id="' + idnews + '" page="' + (Number(page)+Number(1)) + '">Komentar Lainnya <span style="font-size:12px;">&#9660;</span></a></li> </ul>');
+					loadMoreKomentar(idnews, (parseInt(page)+1), mod);
+				} else {
+					$('.hal-komentar').html('');
+				}
+			}
+			if(typeof e.total_data !== undefined) {
+				if(e.total_data == null) {
+					e.total_data = 0;
+				}
+				if(page == 1) {
+					$('.jml-komentar').append('Komentar <span class="komentarCount">(' + e.total_data + ')</span>');
+				}
+			}
+		}
+	});
+}
+$('.fb-comment-btn').click(function() {
+	$('.komentar-inside').hide();
+	$('.hal-komentar').hide();
+	$('.fb-comments').show();
+	return false;
+})
+$('.tempo-comment-btn').click(function() {
+	$('.fb-comments').hide();
+	$('.komentar-inside').show();
+	$('.hal-komentar').show();
+	return false;
+})
+// Fungsi event button logout
+function buttonLogout() {
+	$('.logoutComment').click(function() {
+		var tempoToken = docCookies.getItem('tempoToken');
+		logout(tempoToken);
+		return false;
+	});
+}
+function buttonLogoutTop() {
+	$('.buttonTopLogout').click(function() {
+		var tempoToken = docCookies.getItem('tempoToken');
+		logout(tempoToken);
+		return false;
+	});
+}
+// Login top
+function loginTop() {
+	$('.loginTop').click(function() {
+		$('.usernameTop').css('border-color','');
+		$('.passwordTop').css('border-color','');
+		var username = $('.usernameTop').val();
+		var password = $('.passwordTop').val();
+		$.ajax({
+			type: "POST",
+			url: "/rest/auth/sso.json",
+			dataType: "JSON",
+			data:{"usr":username,"pass":password},
+			beforeSend: function(a) {
+				a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+			},
+			success: function(e) {
+				if(typeof e.token !== "undefined") { // Jika login sukses
+					token = e.token;
+					docCookies.setItem("tempoToken", e.token, "31536e3", "/", ".tempo.co");
+					// Dapatkan Nama
+					$.ajax({
+						type: "POST",
+						url: "/rest/auth/sso.json",
+						dataType: "JSON",
+						data:{"token":e.token},
+						beforeSend: function(a) {
+							a.setRequestHeader("Authorization", "Basic ZGV2MjAxNTp0ZW1wb2RldjIwMTU=")
+						},
+						success: function(e) {
+							if(typeof e.email !== undefined) { // Jika berhasil dapatkan nama
+								$('.auth-komentar').html('');
+								$('.auth-komentar').html('<div class="block-profil">' +
+															'<div class="nama-profil"><a href="#" title="' + e.nama_depan + '">' + e.nama_depan + '</a></div>' +
+															'<ul class="profil-link">' +
+																'<li><a target="_blank" href="http://langganan.tempo.co/profil?email=' + e.email + '">Edit Profil</a></li>' +
+																'<li><a target="_blank" href="http://indonesiana.tempo.co/' + e.username + '">Profil Indonesiana</a></li>' +
+																'<li><a target="_blank" href="http://indonesiana.tempo.co/create_text">Tulis Indonesiana</a></li>' +
+																'<li><a href="#" class="logoutComment">Keluar</a></li>' +
+															'</ul>' +
+														'</div>');
+								buttonLogout();
+								$('.top-space-login').html('');
+								$('.top-space-login').html('<ul>' +
+																'<li>' + e.nama_depan +
+																	'<ul>' +
+																		'<li style="height: 10px;"><a href="http://langganan.tempo.co/profil?email=' + e.email + '">Profil</a></li>' +
+																		'<li style="height: 10px; padding-bottom: 20px;"><a href="#" class="buttonTopLogout">Logout</a></li>' +
+																	'</ul>' +
+																'</li>');
+								buttonLogoutTop();
+							} else { // Jika gagal dapatkan nama
+								$('.auth-komentar').html('');
+								$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+															'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+															'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+														'</div>');
+								// Top login
+								$('.top-space-login').html('');
+								$('.top-space-login').html('<ul>' +
+										'<li><span class="user-login"></span>Login' +
+											'<ul>' +
+												'<li>' +
+													'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+													'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+													'<button class="login-button loginTop">Login!</button>' +
+												'</li>' +
+											'</ul>' +
+										'</li>' +
+										'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+								loginTop();
+								$('.usernameTop').css('border-color','red');
+								$('.passwordTop').css('border-color','red');
+							}
+						}
+					});
+				} else { // Jika login gagal
+					$('.auth-komentar').html('');
+					$('.auth-komentar').html('<div class="block-profil" style="margin-bottom:0;">' +
+												'<input type="text" class="form inputUsername" placeholder="Email Tempo ID" style="width:45.8%; float:left; margin-right:10px;">' +
+												'<input type="password" class="form inputPassword" placeholder="Password Tempo ID" style="width:45.8%;">' +
+											'</div>');
+					// Top login
+					$('.top-space-login').html('');
+					$('.top-space-login').html('<ul>' +
+							'<li><span class="user-login"></span>Login' +
+								'<ul>' +
+									'<li>' +
+										'<div class="m10-t"><input type="text" class="login-passwd usernameTop" placeholder="login"/></div>' +
+										'<input type="password" class="login-passwd passwordTop" placeholder="password"/>' +
+										'<button class="login-button loginTop">Login!</button>' +
+									'</li>' +
+								'</ul>' +
+							'</li>' +
+							'<li><a href="http://langganan.tempo.co/registrasi.php" class="fade"><span class="user-register"></span>Register</a></li>');
+					loginTop();
+					$('.usernameTop').css('border-color','red');
+					$('.passwordTop').css('border-color','red');
+				}
+			}
+		});
+	});
+}
+// Load More Komentar
+function loadMoreKomentar(news_id, page, mod) {
+	if(typeof mod === "undefined") {
+		mod = '';
+	}
+	$('.loadMoreKomentar').click(function() {
+		var news_id = $(this).attr('news_id');
+		var page = $(this).attr('page');
+		$('.hal-komentar').html('<ul class="pagination-nb tengah"> <li><center><img src="/assets/teco/images/tempo-loading-50.gif"/></center></li> </ul>');
+		get_komentar(news_id, page, mod);
+		return false;
+	});
+}
