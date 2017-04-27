@@ -1,7 +1,21 @@
-﻿
+﻿@using System;
+@using System.Collections.Generic;
+
 @{
-    ViewBag.Title = "Search ";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Search ";
+  Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <p class="resultInfo">Found @ViewBag.searchCount results</p>
+@ViewBag.regexTry
+@{
+  int i;
+  for (i = 0; i < ViewBag.searchCount; i++) {
+    <div class="news-container">
+      <div class="news-title">@ViewBag.searchResult.ElementAt(1).newsData.title</div>
+      <div class="news-date">@ViewBag.searchResult.ElementAt(1).newsData.date</div>
+      <div class="news-content">@ViewBag.searchResult.ElementAt(1).newsData.date</div>
+    </div>
+  }
+
+}
