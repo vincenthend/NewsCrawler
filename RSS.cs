@@ -21,28 +21,46 @@ namespace ConsoleApplication3
             XmlNodeList titleList = xmlDoc.GetElementsByTagName("title");
             XmlNodeList urlList = xmlDoc.GetElementsByTagName("link");
             XmlNodeList dateList = xmlDoc.GetElementsByTagName("pubDate");
-            string[] title = new string[titleList.Count];
-            string[] url = new string[urlList.Count];
+            string[] title = new string[dateList.Count];
+            string[] url = new string[dateList.Count];
             string[] date = new string[dateList.Count];
             string[] content = new string[dateList.Count];
-            date[0] = dateList[0].InnerXml;
-            for (int i = 1; i < urlList.Count; i++)
+            for (int i = 0; i < dateList.Count; i++)
             {
-                title[i] = titleList[i].InnerXml;
-                url[i] = urlList[i].InnerXml;
+                date[i] = dateList[i].InnerXml;
+                title[i] = titleList[i + 2].InnerXml;
+                url[i] = urlList[i + 2].InnerXml;
                 WebClient client = new WebClient();
-                string htmlText = client.DownloadString(url[i]);
-                HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
-                htmlDoc.LoadHtml(htmlText);
-                StringBuilder sb = new StringBuilder();
-                IEnumerable<HtmlNode> nodes = htmlDoc.DocumentNode.Descendants().Where(n =>
-                   n.NodeType == HtmlNodeType.Text &&
-                   n.ParentNode.Name != "script" &&
-                   n.ParentNode.Name != "style");
-                foreach (HtmlNode node in nodes)
+                string htmlText = null;
+                try
                 {
-                    Console.WriteLine(node.InnerText);
-                    //content[i] = htmlDoc.GetElementsByTagName("p");
+                    htmlText = client.DownloadString(url[i]);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error page not loaded");
+                }
+                if (htmlText != null)
+                {
+                    HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                    htmlDoc.LoadHtml(htmlText);
+                    var nodes = htmlDoc.DocumentNode.SelectNodes("//p");
+                    StringBuilder sb = new StringBuilder();
+                    if (nodes != null)
+                    {
+                        foreach (var item in nodes)
+                        {
+                            string text = item.OuterHtml;
+                            if (!string.IsNullOrEmpty(text))
+                            {
+                                sb.AppendLine(text.Trim());
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    content[i] = sb.ToString();
+                    Console.WriteLine(content[i]);
+                    Console.Read();
                 }
             }
             Console.Read();
