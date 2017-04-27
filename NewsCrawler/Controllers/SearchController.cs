@@ -34,7 +34,7 @@ namespace NewsCrawler.Controllers {
       RSSData[] rssArray = dbNews.rssDB.SqlQuery("select * from rssdata").ToArray();
 
       for (i = 0; i < rssArray.Length; i++) {
-        Loader.loadRSS(rssArray[i].url, dbNews, connection);
+        Loader.loadRSS(rssArray[i].url, dbNews, connection,rssArray[i].contentPlaceholder);
       }
 
       // Empty tables

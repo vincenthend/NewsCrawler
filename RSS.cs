@@ -18,7 +18,7 @@ namespace ConsoleApplication3
             XmlNodeList titleList = xmlDoc.GetElementsByTagName("title");
             XmlNodeList urlList = xmlDoc.GetElementsByTagName("link");
             XmlNodeList dateList = xmlDoc.GetElementsByTagName("pubDate");
-            string[] title = new string[titleList.Count];
+            string[] title = new string[titleLi st.Count];
             string[] url = new string[urlList.Count];
             string[] date = new string[dateList.Count];
             string[] content = new string[dateList.Count];
