@@ -13,7 +13,7 @@
         <form method="get" class="web-form" action="~/Search/">
             <a href="~/"><div class="web-logo"></div></a>
             <div class="web-search-bar">
-                <input type="text" name="searchQuery" class="form-textbox" required>
+                <input type="text" name="searchQuery" class="form-textbox" value=@ViewBag.SearchQuery required>
                 <button type="submit" class="form-btn btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
                 <div class="web-search-option">
                     <label class="radio-inline"><input type="radio" name="searchType" value=0 checked />Boyer-Moore</label>
