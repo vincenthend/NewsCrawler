@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using MySql.Data.MySqlClient;
 using System.Web.Mvc;
 using NewsCrawler.Models;
 using NewsCrawler.Controllers;
+using MySql.Data.Entity;
+using System.Data.Entity;
 
 namespace NewsCrawler.Controllers {
   public class SearchController : Controller {
-    //private NewsDB dbNews = new NewsDB();
 
     /**
     * Mencari string pada newsList dengan urutan judul baru kemudian isi.
@@ -18,35 +20,53 @@ namespace NewsCrawler.Controllers {
     * @return List berita yang lolos search dengan lokasi ditemukannya
     */
     public ActionResult Index(string searchQuery, int searchType) {
+      int i;
+      DbConfiguration.SetConfiguration(new MySqlEFConfiguration());
+      String connectionString = "server=127.0.0.1;User Id=root;password=password;database=db_newscrawler";
+      MySqlConnection connection = new MySqlConnection(connectionString);
+
+      NewsCrawlerDB dbNews = new NewsCrawlerDB(connection, false);
+      dbNews.Database.CreateIfNotExists();
+
+      connection.Open();
 
       // Check meta, update if last update > 1 hours
-      //MetadataDB dbMeta = new MetadataDB();
+      RSSData[] rssArray = dbNews.rssDB.SqlQuery("select * from rssdata").ToArray();
+
+      for (i = 0; i < rssArray.Length; i++) {
+        Loader.loadRSS(rssArray[i].url, dbNews, connection);
+      }
+
+      // Empty tables
+      dbNews.News.SqlQuery("delete * from News");
+
+      // Get data from RSS
 
       // Convert news list to array
-      //News[] newsArray = dbNews.News.ToArray();
-      //List<NewsFound> newsFound = new List<NewsFound>();
+      News[] newsArray = dbNews.News.SqlQuery("select * from News").ToArray();
+      List<NewsFound> newsFound = new List<NewsFound>();
 
       // Do Search
-      /*if (searchType == 0) {
+      if (searchType == 0) {
         newsFound = searchKMP(newsArray, searchQuery);
       }
       else if (searchType == 1) {
         newsFound = searchBM(newsArray, searchQuery);
       }
       else if (searchType == 2) {
-        //Regex
+        newsFound = searchRegex(newsArray, searchQuery);
       }
       else if (searchType == 3) {
         //debug to show all news
         newsFound = showAll(newsArray);
-      }*/
+      }
 
-      ViewBag.regexTry = Searcher.regexConvert(searchQuery);
+      ViewBag.regexQuery = Searcher.regexConvert(searchQuery);
       ViewBag.searchQuery = searchQuery;
       ViewBag.searchType = searchType;
-      //ViewBag.searchResult = newsFound;
-      //ViewBag.searchCount = newsFound.Count;
-      
+      ViewBag.searchResult = newsFound;
+      ViewBag.searchCount = newsFound.Count;
+
       return View();
     }
 
@@ -117,6 +137,39 @@ namespace NewsCrawler.Controllers {
     }
 
     /**
+     * Mencari string pada newsList dengan regex judul baru kemudian isi.
+     * 
+     * @param newsList list berita dari database
+     * @param searchQuery search pattern yang digunakan
+     * @return List berita yang lolos search dengan lokasi ditemukannya
+     */
+    private List<NewsFound> searchRegex(News[] newsList, string searchQuery) {
+      int i;
+      int foundLoc;
+      List<NewsFound> foundList = new List<NewsFound>();
+
+      // Begin searching in all newsList
+      for (i = 0; i < newsList.Length; i++) {
+        // Search Title
+        foundLoc = Searcher.RegexSearchFirst(newsList[i].title, searchQuery);
+        if (foundLoc == -1) {
+          // Search Description
+          Searcher.RegexSearchFirst(newsList[i].content, searchQuery);
+          if (foundLoc != -1) {
+            // Found in description
+            foundList.Add(new NewsFound(newsList[i], foundLoc, false));
+          }
+        }
+        else {
+          // Found in Title
+          foundList.Add(new NewsFound(newsList[i], foundLoc, true));
+        }
+      }
+
+      return foundList;
+    }
+
+    /**
      * Menampilkan newsList
      * 
      * @param newsList list berita dari database
@@ -129,7 +182,7 @@ namespace NewsCrawler.Controllers {
 
       // Begin searching in all newsList
       for (i = 0; i < newsList.Length; i++) {
-        { 
+        {
           foundList.Add(new NewsFound(newsList[i], foundLoc, true));
         }
       }

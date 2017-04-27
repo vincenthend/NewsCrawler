@@ -12,9 +12,9 @@
   int i;
   for (i = 0; i < ViewBag.searchCount; i++) {
     <div class="news-container">
-      <div class="news-title">@ViewBag.searchResult.ElementAt(1).newsData.title</div>
-      <div class="news-date">@ViewBag.searchResult.ElementAt(1).newsData.date</div>
-      <div class="news-content">@ViewBag.searchResult.ElementAt(1).newsData.date</div>
+      <div class="news-title">@ViewBag.searchResult[i].newsData.title</div>
+      <div class="news-date">@ViewBag.searchResult[i].newsData.date</div>
+      <div class="news-content">@ViewBag.searchResult[i].newsData.content</div>
     </div>
   }
 
