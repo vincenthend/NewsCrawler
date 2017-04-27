@@ -4,11 +4,14 @@ namespace ConsoleApplication3
 {
     using System;
     using System.Xml;
-    using System.Windows.Forms;
-
+    using System.Windows;
+    using System.Text;
+    using System.Collections.Generic;
+    using System.Linq;
+    using HtmlAgilityPack;
     public class Sample
     {
-        public static string[] getRSS(string xmlText)
+        public static void  getRSS(string xmlText)
         {
             //Create the XmlDocument.
             XmlDocument xmlDoc = new XmlDocument();
@@ -29,11 +32,24 @@ namespace ConsoleApplication3
                 url[i] = urlList[i].InnerXml;
                 WebClient client = new WebClient();
                 string htmlText = client.DownloadString(url[i]);
-                HtmlDocument htmlDoc = new HtmlDocument();
-                htmlDoc.load(htmlText);
-                content[i] = htmlDoc.GetElementsByTagName("p");
+                HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                htmlDoc.LoadHtml(htmlText);
+                StringBuilder sb = new StringBuilder();
+                IEnumerable<HtmlNode> nodes = htmlDoc.DocumentNode.Descendants().Where(n =>
+                   n.NodeType == HtmlNodeType.Text &&
+                   n.ParentNode.Name != "script" &&
+                   n.ParentNode.Name != "style");
+                foreach (HtmlNode node in nodes)
+                {
+                    Console.WriteLine(node.InnerText);
+                    //content[i] = htmlDoc.GetElementsByTagName("p");
+                }
             }
             Console.Read();
+        }
+        public static void Main(string[] args)
+        {
+            getRSS("detikcom.xml");
         }
     }
 }
