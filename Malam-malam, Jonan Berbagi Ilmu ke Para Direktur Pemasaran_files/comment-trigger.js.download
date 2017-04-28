@@ -1,0 +1,2448 @@
+/**
+ *
+ * Agustus 2013
+ */
+
+(function($) {
+    $.fn.extend( {
+        limiter: function(limit, elem) {
+            $(this).on("keyup focus", function() {
+                setCount(this, elem);
+            });
+            function setCount(src, elem) {
+                var chars = src.value.length;
+                if (chars > limit) {
+                    src.value = src.value.substr(0, limit);
+                    chars = limit;
+                }
+                elem.html( limit - chars );
+            }
+            setCount($(this)[0], elem);
+        }
+    });
+})(jQuery);
+
+var comment = {
+	baseurl	: 'https://comment.detik.com/v2/api/',
+	width	: 560,
+	url		: 'https://comment.detik.com/v2/',
+	parent_url : '',
+	parent_top : 0,
+	cur_com	: 0,
+	group	: '',
+	identifier : '',
+	limit	: 10,
+	view	: 0,
+	page	: 1,
+	p_activ	: 1,
+	art_id	: this.identifier,
+	native1 : '',
+	native2 : '',
+	native1Loaded : 0,
+	title	: '',
+	date	: '',
+	urlpage	: '',
+	maxchar : 500,
+	css 	: '',
+	cur_height : '',
+	tsort	: 'newest',
+	recaptcha : false,
+	callBack : '',
+	url_share : '',
+	appId : '',
+	clientId : '',
+	css : '',
+	complete : '',
+    players : [],
+	fb_attr	: '',
+	prefix : '',
+	isQA : 0,
+	closeSubmit : 0,
+	isProkontra : 0,
+    isMobile : 0,
+    isNativeads : 0,
+    theheightads : 95,
+	prokon_flag : 'pro',
+	prokon_flag_post : 'pro',
+	phwording : 'Ketik komentar disini',
+	cssinhead : function(url) {
+	    var head  = document.getElementsByTagName('head')[0];
+	    var link  = document.createElement('link');
+
+	    link.rel  = 'stylesheet';
+	    link.type = 'text/css';
+	    link.href = url;
+	    link.media = 'all';
+	    head.appendChild(link);
+	},
+	jsinhead : function(url, cont, attr) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		if(url != null)
+			script.src = url;
+		if(cont != null)
+			script.innerHTML = cont;
+		if(typeof(attr) != 'undefined')
+			script.setAttribute(attr.atname, attr.atval);
+
+		head.appendChild(script);
+	},
+	mandatoryfile : function(obj) {
+		this.cssinhead(this.baseurl+'css/newcomment.css?v2.2.7'); // last design
+
+        if (parseInt(obj.isMobile) > 0)
+			this.isMobile = 1;
+
+            if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                this.theheightads = 140
+            }
+
+		if (parseInt(obj.prokontra) > 0)
+			this.isProkontra = obj.prokontra;
+
+		if (parseInt(this.isProkontra) == 1)
+			this.cssinhead(this.baseurl+'css/prokontra.css?v2.2.0'); // pro kontra
+        else if (parseInt(this.isProkontra) == 2) { // head to head
+            if(this.isMobile > 0)
+                this.cssinhead(this.baseurl+'css/headtohead_inet_msite.css?v1.2');
+            else
+                this.cssinhead(this.baseurl+'css/headtohead_inet.css?v1.2');
+        }
+
+		this.jsinhead('//cdn.detik.net.id/libs/draeton/1.0/checkImage.min.js');
+		//this.jsinhead('https://www.google.com/recaptcha/api/js/recaptcha_ajax.js');
+		this.jsinhead(this.baseurl+'js/comment-mention.js');
+		this.jsinhead(this.baseurl+'js/nativeads/zoneids.js');
+
+		if(typeof(obj.css) != 'undefined' && obj.css != '')
+			comment.cssinhead(obj.css);
+
+	},
+	firstresize : function (){
+		setTimeout(function(){
+			var bheight = this.cur_height = $('.combox').height();
+
+			$.postMessage(
+				'height:'+bheight,
+	       		comment.parent_url,
+	       		parent
+	         );
+		}, 410);
+	},
+	resizeparent : function (){
+		setTimeout(function(){
+			var bheight = $('.combox').height();
+			// temporary karna dynamite ads
+			bheight	= bheight + 25;
+
+			while (bheight != this.cur_height) {
+				this.cur_height = bheight;
+				bheight = $('.combox').height();
+			}
+
+			$.postMessage(
+				'height:'+bheight,
+	       		comment.parent_url,
+	       		parent
+			);
+		}, 400);
+	},
+	parentLayout : function (){
+		$.postMessage(
+			'login',
+       		comment.parent_url,
+       		parent
+         );
+	},
+	combox : function(obj, frompage) {
+		this.isQA = obj.isQA;
+		this.closeSubmit = obj.closeSubmit;
+
+		if(parseInt(comment.isQA) > 0) // tambahkan css jika tipe == "qa"
+			this.cssinhead(this.baseurl+'css/qa.css?v1.1');
+
+		if(comment.prefix == 'cnn') // custom css untuk cnn
+			this.cssinhead(this.baseurl+'css/sty-cnn.css?v1.4');
+
+        var combox = $('.combox')
+        var timeline = '';
+        if(this.isProkontra == 2)
+            timeline = ' timeline';
+
+		$(combox).addClass(timeline)
+
+		profile.getData(obj.profile);
+
+		if(parseInt(obj.closed) > 0) {
+			$(combox).html(' ');
+		}
+		else {
+            if(typeof(obj.label1) != 'undefined' && typeof(obj.label2) != 'undefined') {
+				this.label1 = obj.label1;
+                this.label2 = obj.label2;
+			}
+            // var com_head = comment.com_head(obj.counter);
+            this.com_head_counter(obj.counter)
+            if(this.isProkontra == 2) {
+                var player1 = 'Player 1';
+                var player2 = 'Player 2';
+
+                if(typeof(this.label1) != 'undefined' && typeof(this.label2) != 'undefined') {
+                    player1 = this.label1;
+                    player2 = this.label2;
+                }
+
+                var comrows = this.comrowsHeadtoHead(obj);
+                if($('.headtobar').length <= 0) {
+                    var bar = $('<div/>').addClass('bar headtobar'),
+                    bar_img = $('<img/>').addClass('node').attr({src:comment.baseurl+'images/il_vs.png'})
+
+                    h3fl    = $('<h3/>').addClass('fl').html(player1),
+                    h3fr    = $('<h3/>').addClass('fr').html(player2);
+                    $(bar).append(bar_img).append(h3fl).append(h3fr);
+                    $(combox).append(bar).append(comrows);
+                }
+                else {
+                    $(combox).append(comrows);
+                }
+            }
+            else {
+			    comment.comrows(obj);
+            }
+		}
+
+		// if($(combox).html() != '') {
+		// 	$('#'+comment.target).html(combox);
+		// }
+
+		if(parseInt(obj.closed) > 0)
+			return false;
+
+		if(parseInt(this.view) > 0) {
+			var seeDetail = '';
+			if(parseInt(obj.counter) > comment.view)
+				var seeDetail = this.seeDetail();
+
+			$(combox).append(seeDetail);
+		}
+		else if(parseInt(this.view) < 0) {
+
+		}
+		else {
+			// update 06-02-2014
+			this.createPage(combox, obj);
+		}
+
+		// (73) pre mention process
+		//mention.getUser();
+		// end (73)
+
+		this.firstresize();
+
+		if(!frompage) {
+			if(parseInt(comment.cur_com) > 0 ) {
+				setTimeout(function (){
+					comment.scrollto(comment.cur_com);
+				}, 500);
+			}
+		}
+
+		setTimeout(function(){
+			comment.installCounter(obj.refer_count);
+		}, 1500);
+
+		setTimeout(function(){
+			comment.checkImage(obj);
+		}, 1200);
+
+		comment.native1Loaded = 0;
+		if (comment.appId == 10018 || comment.appId == 10021 || comment.appId == 75 || comment.appId == 105 || comment.appId == 45) { // pasangmata desktop/msite, detikTv desktop/msite, suarabuncit
+			nothing ='';
+		}
+		else {
+			setTimeout(function(){
+                if(comment.isNativeads > 0) {
+				    comment.createAds2(comrows);
+                }
+			}, 1100);
+		}
+	},
+    createAds2 : function(comrows) {
+    	var slots = ['nativekomentar1','nativekomentar1','nativekomentar2','nativekomentar3','nativekomentar4','nativekomentar5','nativekomentar6','nativekomentar7','nativekomentar8','nativekomentar9','nativekomentar10'];
+
+        setTimeout(function(){
+			comment.resizeparent();
+		}, 2100);
+
+        var thewidth = document.getElementById('new_comment').offsetWidth
+        // Slot 1
+       // var adsKanal	= adsFolder[0]
+		var naNumber1	= (2*comment.p_activ)-1
+
+		var slot1		= slots[naNumber1]
+
+		var divpos_1 	= dtkAds.getPositionDiv(naNumber1)
+		parent_id		= 'nativeads_'+divpos_1
+
+        // Initiate the container
+       var the_div = document.createElement('li')
+       the_div.id = slot1 + '_container'
+       $('#'+parent_id).append(the_div)
+
+       // Initiate the child for DFP place
+       var the_div_child = document.createElement('div')
+       the_div_child.id = slot1
+    //    the_div_child.style.width = thewidth+'px'
+       $('#' + slot1 + '_container').addClass('ads_child').html(the_div_child)
+
+       // Load the ad and append it
+       the_ad = OA_output[slot1]
+       // the_ad = OA_output["nativekomentar9"]
+       $('#' + slot1 + '_container').append($(the_ad))
+
+
+        checkTheHeight();
+        function checkTheHeight()
+        {
+            var checkInterval;
+            function checkStat()
+            {
+                // if is loaded
+                if (parseInt($('#'+slot1).find('iframe').attr('height')) > 0)
+                {
+                    clearInterval(checkInterval);
+
+                    adsHeight = $('#'+slot1).find('iframe').attr('height')
+                    adsHeight = parseInt(adsHeight)+2
+                    console.log('got it : '+adsHeight)
+                    $('#'+slot1).find('iframe').css({height:adsHeight+'px'})
+                }
+            }
+
+        checkInterval = setInterval(checkStat,500);
+        }
+
+       // Slot2
+       var naNumber2	= (2*comment.p_activ);
+
+       var slot2		= slots[naNumber2]
+
+       var divpos_2 	= dtkAds.getPositionDiv(naNumber2)
+       parent_id2		= 'nativeads_'+divpos_2
+
+       // Initiate the container
+      var the_div2 = document.createElement('li')
+      the_div2.id = slot2 + '_container'
+      $('#'+parent_id2).append(the_div2)
+
+      // Initiate the child for DFP place
+      var the_div_child2 = document.createElement('div')
+      the_div_child2.id = slot2
+    //   the_div_child2.style.width = thewidth+'px'
+      $('#' + slot2 + '_container').addClass('ads_child').html(the_div_child2)
+
+      // Load the ad and append it
+     the_ad2 = OA_output[slot2]
+       // the_ad2 = OA_output["nativekomentar10"]
+      $('#' + slot2 + '_container').append($(the_ad2))
+
+
+      checkTheHeight2();
+      function checkTheHeight2()
+      {
+          var checkInterval2;
+          function checkStat2()
+          {
+              // if is loaded
+              if (parseInt($('#'+slot2).find('iframe').attr('height')) > 0)
+              {
+                  clearInterval(checkInterval2);
+
+                  adsHeight2 = +$('#'+slot2).find('iframe').attr('height')
+                  adsHeight2 = parseInt(adsHeight2)+2
+                //   console.log('got it 2 : '+adsHeight2)
+                  $('#'+slot2).find('iframe').css({height:adsHeight2+'px'})
+              }
+          }
+
+      checkInterval2 = setInterval(checkStat2,500);
+      }
+    },
+	checkAdsLoaded : function(elm_ads, callBack) {
+		var loaded = false;
+		var checkInt=0;
+
+		var elm_html = $(elm_ads).html();
+		if (typeof(elm_html) == 'undefined') {
+			checkInt = setInterval(comment.checkAdsLoaded(elm_ads), 500);
+			console.log('cari terus 1');
+		}
+		else {
+			setTimeout(callBack, 100);
+			if (checkInt != 0)
+				clearInterval(checkInt);
+
+			console.log('done');
+		}
+
+		return
+	},
+	checkImage : function(data) {
+		$('.user_pic img').each(function(i, pic){
+			checkImage(pic.src,
+				function(){
+
+				},
+				function(){
+					$(pic).attr({src:comment.baseurl+'images/stranger.jpg'});
+				}
+			);
+		 });
+	},
+    com_head_counter : function(counter) {
+        $('.ch_label').find('h3').html(counter+' Komentar')
+    },
+	com_head : function(obj, counter) {
+        if(comment.closeSubmit > 0) {
+			return $('<div/>').addClass('com_head box_dk').html('');
+		}
+		if(typeof(counter) == 'undefined') {
+			comment.log('Total counter tidak dikenali');
+			return false;
+		}
+
+		// TODO: buat pengecekan numeric
+
+		var com_head	= $('<div/>').addClass('com_head box_dk');
+		if(parseInt(comment.isQA) > 0) {
+			var ch_label	= $('<div/>').addClass('title ch_label cldark').html('<h3>TANYA JAWAB </h3><a class="subscribe subsred"><span>Form Pengisian</span></a>');
+			var krm_label	= 'KIRIM PERTANYAAN';
+		}
+		else {
+			// if(parseInt(comment.group) == parseInt(55555)) { // untuk seleksi menteri
+			// 	var head_wording = '<h3>'+counter+' Informasi Terkirim</h3>';
+			// 	comment.phwording = 'Silakan kirim informasi terkait rekam jejak calon menteri ini, positif/negatif';
+			// }
+			// else
+				var head_wording = '<h3>'+counter+' Komentar</h3>';
+
+        if(typeof(obj.label1) != 'undefined' && typeof(obj.label2) != 'undefined') {
+          this.label1 = obj.label1;
+          this.label2 = obj.label2;
+        }
+
+            if(this.isProkontra == 2) {
+                var player1 = 'Player 1';
+                var player2 = 'Player 2';
+
+                if(typeof(this.label1) != 'undefined' && typeof(this.label2) != 'undefined') {
+                    player1 = this.label1;
+                    player2 = this.label2;
+                }
+
+                var styled = $('<div/>').addClass('styled-select fl'),
+                caret = $('<span/>').addClass('caret'),
+                player = $('<select/>').addClass('player_select')
+                            .change(function(){
+                                comment.prokon_flag_post = $(this).val();
+                            }),
+                opt_1   = $('<option/>').attr({value:'pro'}).html(player1),
+                opt_2   = $('<option/>').attr({value:'kontra'}).html(player2);
+
+                $(styled).append(caret).append(player.append([opt_1,opt_2]));
+
+			    var ch_label	= $('<div/>').addClass('bar pd0').html(styled);
+            }
+            else
+                var ch_label	= $('<div/>').addClass('title ch_label').html(head_wording);
+
+			if (parseInt(this.isProkontra) == 1) {
+				var pk_tbl	= $('<table/>').css({float:'right'}).attr({border:0,cellspacing:0,cellpadding:0}),
+				pkt_tr		= $('<tr/>'),
+				pkt_td		= $('<td/>').attr({valign:'middle'}).html('SAYA PILIH &nbsp;&nbsp;').css({color:'#FFF'}),
+				pkt_td1		= $('<td/>'),
+				pkt_td2		= $('<td/>');
+				var sp_pro = $('<div/>').addClass('sbt_pk sp_pro bg_pro').html('PRO')
+							.click(function () {
+								comment.prokon_flag_post = 'pro';
+								$(this).removeClass('bg_off');
+								$('.sp_kon').addClass('bg_off');
+							});
+				var sp_kon = $('<div/>').addClass('sbt_pk sp_kon bg_kontra bg_off').html('KONTRA')
+							.click(function () {
+								comment.prokon_flag_post = 'kontra';
+								$(this).removeClass('bg_off');
+								$('.sp_pro').addClass('bg_off');
+							});
+
+				$(pk_tbl).append(pkt_tr.append(pkt_td).append(pkt_td1.append(sp_pro)).append(pkt_td2.append(sp_kon)));
+
+				var prokon_opt = $('<span/>').append(pk_tbl);
+				$(ch_label).append(prokon_opt);
+			}
+
+			var krm_label	= 'Kirim Komentar';
+			if(parseInt(comment.group) == parseInt(55555)) // untuk seleksi menteri
+				var krm_label = 'Kirim';
+		}
+		var divtext		= $('<div/>').addClass('divtext text_komentar'),
+		txtcomment		= $('<textarea/>').addClass('txtcomment txtmention')
+							.attr({id:"txtcomment", placeholder:comment.phwording, style:'color: rgb(190, 190, 190); font-size: 16px; padding: 10px; height: 64px;'})
+							.keyup(function(e) {
+								if (e.ctrlKey && e.keyCode == 13) {
+									comment.press(this);
+								}
+							});
+		var dk_bot		= $('<div/>').addClass('dk_bot'),
+		dk_count		= $('<span/>').addClass('help-inline dk_count').html(this.maxchar),
+		label			= $('<label/>'),
+		i_check			= $('<input/>').attr({name: 'share_fb', type: 'checkbox'}),
+		fb_img			= $('<img />').attr({src: comment.baseurl+'images/dk_share_fb.png'}),
+		label_b			= $('<label/>').css({'margin-left':'-10px'}),
+		i_check_b		= $('<input/>').attr({name: 'share_tw', type: 'checkbox'}),
+		tw_img			= $('<img />').attr({src: comment.baseurl+'images/dk_share_tw.png'}),
+		btn_dk			= $('<input />').addClass('btn_dk fr').attr({type:'button'}).val(krm_label)
+							.prop('disabled', true)
+							.bind('click', function(){
+								comment.press(txtcomment);
+							}),
+		loader_img		= $('<img/>').addClass('info_loader fr com_loader').attr({src: comment.baseurl+'images/com_loader.gif'}),
+		loader_text		= $('<div/>').addClass('info_loader fr com_loader2'),
+		clearfix_a		= $('<div/>').addClass('clearfix');
+
+		if (parseInt(this.isProkontra) == 1) {
+			var sp_pro = $('<label/>').addClass('sbt_pk sp_pro bg_pro').html('PRO')
+						.click(function () {
+							comment.prokon_flag_post = 'pro';
+							$(this).removeClass('bg_off');
+						});
+			var sp_kon = $('<label/>').addClass('sbt_pk sp_kon bg_kontra bg_off').html('KONTRA')
+						.click(function () {
+							comment.prokon_flag_post = 'kontra';
+							$(this).removeClass('bg_off');
+						});
+		}
+
+		// handle textarea
+		$(txtcomment).focus(function () {
+			comment.textFocus(this);
+			comment.textCounter(this);
+		});
+		$(txtcomment).blur(function () {
+			comment.textBlur(this);
+		});
+		$(txtcomment).keyup(function(e) {
+			comment.handleText(this);
+		});
+		// end handle textarea
+
+		$(dk_bot).append(dk_count);
+		if(parseInt(comment.group) == parseInt(55555)) { // untuk seleksi menteri
+			$(dk_bot).append('').append('');
+		}
+		else {
+			$(dk_bot).append(label.append(i_check).append(fb_img)).append(label_b.append(i_check_b).append(tw_img));
+		}
+		//$(dk_bot).append(sp_pro).append(sp_kon);
+		$(dk_bot).append(btn_dk).append(loader_img).append(loader_text).append(clearfix_a);
+		$(divtext).append(txtcomment);
+
+		$(com_head).append(ch_label).append(divtext).append(dk_bot);
+
+		if(this.recaptcha)
+			reCaptcha.addRecaptcha(com_head, 'm_recaptcha');
+
+		return com_head;
+	},
+	comrows : function(data) {
+		if(typeof(data) == 'undefined') {
+			comment.log('List data tidak dikenali');
+			return false;
+		}
+		else if(typeof(data) != 'object') {
+			comment.log('List data bukan object');
+			return false;
+		}
+
+		var entries		= data.entries;
+		var sort_type	= data.sorting;
+		comment.p_activ	= data.pages.page;
+
+        if($('.comrows'))
+		      var comrows	= $('.comrows')
+        else
+            var comrows     = $('<div/>').addClass('comrows')
+
+		var sorting			= '';
+		//if(parseInt(data.counter) > 0)
+			//sorting			= this.sorting();
+		if (parseInt(data.counter) > 0) {
+			if (parseInt(this.isProkontra) == 1)
+				sorting		= this.prokonTab(data);
+			else
+				sorting		= this.sorting();
+		}
+
+		var comment_list	= $('<ul/>').addClass('comment_list media-list');
+
+		if(parseInt(data.counter) > 0 ) {
+			$(entries).each(function(index, value){
+				var prf_image = comment.baseurl+'images/stranger.jpg';
+				if(typeof(value.prf_image) != 'undefined' && value.prf_image != '')
+					prf_image = value.prf_image;
+
+				var label_qa = '';
+				if(parseInt(comment.isQA) > 0)
+					label_qa = $('<div/>').addClass('label_tanya').html('Tanya');
+
+				var media	= $('<li/>').addClass('list_dk media'),
+				user_pic	= $('<span/>').addClass('user_pic pull-left'),
+				img_		= $('<img/>').attr({src:prf_image});
+
+				var username = '@'+value.prf_user;
+
+				var media_	= $('<div/>').addClass('list_dk_text media-body mb_parent').attr({id:'comment'+value.com_id}),
+				dk_name		= $('<span/>').addClass('dk_name controls controls-row').html('<b>'+value.prf_name+' </b>'),
+				dk_user		= $('<span/>').addClass('dk_name dk_user').html(username),
+				mid_dot		= ' &#8226; ',
+				dk_date		= $('<span/>').addClass('dk_date').html(tanggal.format(value.created)),
+				dk_komen 	= $('<div/>').addClass('dk_komen').html(value.cmt_text),
+				parent_id	= $('<input/>').addClass('parent_id').attr({type: 'hidden'}).val(value.com_id);
+				var clearfix_ = $('<div/>').addClass('clearfix');
+
+				var reactions	= '';
+				if(parseInt(comment.isQA) <= 0)
+					reactions	= comment.reactionElm(value);
+
+				$(user_pic).append(img_);
+				$(media_).append(label_qa).append(dk_name).append(dk_user).append(mid_dot).append(dk_date).append(dk_komen).append(parent_id).append(reactions);
+				$(media).append(user_pic).append(media_).append(clearfix_);
+
+				if(typeof(value.nested) != 'undefined')
+					if(value.nested.length > 0) {
+						$(value.nested).each(function(ind, val){
+							var ref_count = 0;
+							var replyto = '';
+							if(typeof(val.refer_com.prf_name) != 'undefined') {
+								var replyto = '<span class="dk_date"> - tanggapan untuk <a class="nhclick" onclick="comment.scrollto('+val.refer_com.com_id+')">'+val.refer_com.prf_name+'</a></span>';
+								ref_count = 1;
+							}
+
+							var prf_image_ = comment.baseurl+'images/stranger.jpg';
+							if(typeof(val.prf_image) != 'undefined' && val.prf_image != '')
+								prf_image_ = val.prf_image;
+
+							var list_dk_sub		= $('<div/>').addClass('list_dk list_dk_sub');
+							var user_pic_		= $('<span/>').addClass('user_pic pull-left'),
+							img_n				= $('<img/>').attr({src:prf_image_});
+
+							var label_qa_ = '';
+							if(parseInt(comment.isQA) > 0)
+								label_qa_ = $('<div/>').addClass('label_jawab').html('jawab');
+
+							if(parseInt(comment.isQA) > 0)
+								var rep_user = '';
+							else
+								var rep_user = '@'+val.prf_user;
+
+							var nmedia		= $('<div/>').addClass('list_dk_text media-body').attr({id:'comment'+val.com_id}),
+							dk_name_		= $('<span/>').addClass('dk_name controls controls-row').html('<b>'+val.prf_name+' </b>'),
+							dk_user_		= $('<span/>').addClass('dk_name dk_user').html(rep_user),
+							mid_dot_		= ' &#8226; ',
+							dk_date_		= $('<span/>').addClass('dk_date').html(tanggal.format(val.created)),
+							dk_komen_		= $('<div/>').addClass('dk_komen').html(val.cmt_text),
+							parent_id_		= $('<input/>').addClass('parent_id').attr({type: 'hidden'}).val(val.com_id);
+							var clearfix_n	= $('<div/>').addClass('clearfix');
+							var reactions_	= '';
+							if(parseInt(comment.isQA) <= 0)
+								reactions_	= comment.reactionElm(val);
+
+							$(user_pic_).append(img_n);
+							$(nmedia).append(label_qa_).append(dk_name_).append(dk_user_).append(mid_dot_).append(dk_date_).append(replyto).append(dk_komen_).append(parent_id_).append(reactions_);
+							$(list_dk_sub).append(user_pic_).append(nmedia).append(clearfix_n);
+							// add to parent
+							$(media).append(list_dk_sub);
+						});
+					}
+
+				if(typeof(value.advertise) != 'undefined') {
+					$(media_).html('');
+					$(value.advertise).each(function(seq, ads){
+						var ads_head	= $('<a/>').html(ads.caption).attr({href:ads.link}),
+						ads_body		= $('<p/>').addClass('ads_body').html(ads.text);
+						$(media_).append(ads_head).append(ads_body);
+					});
+
+					$(img_).css({visibility: 'hidden'});
+				}
+
+				$(comment_list).append(media);
+				// set nativeads
+				var slots	= [];
+				if (index == 1 || index == 6 ) {
+					var mediaAds	= $('<li/>')
+										//.load( comment.url+"nativeads?zoneid=328", function() {
+										//	//alert( "Banner loaded..." );
+										//});
+					var maDiv		= $('<div/>').attr({id:'nativeads_'+(index*comment.p_activ)});
+					$(comment_list).append(mediaAds.append(maDiv));
+				}
+				// end nativeads
+
+			});
+
+		}
+
+		var clearfix_b	= $('<div/>').addClass('clearfix pt20');
+
+		// $(comrows).append(sorting).append(comment_list).append(clearfix_b);
+        $(comrows).html([sorting,comment_list,clearfix_b]);
+
+		return comrows;
+	},
+    comrowsHeadtoHead : function(data) {
+    comment.removeloader()
+
+		if(typeof(data) == 'undefined') {
+			comment.log('List data tidak dikenali');
+			return false;
+		}
+
+		var entries		= data.entries;
+		comment.p_activ	= data.pages.page;
+
+
+    if($('.comrows'))
+        var comrows	= $('.comrows')
+    else
+        var comrows = $('<div/>').addClass('comrows')
+
+         comrows	= $(comrows).addClass('widget_sr grid_row pd15');
+
+        var line			= $('<div/>').addClass('line');
+        $(comrows).append(line);
+
+        if(parseInt(data.counter) > 0 ) {
+			$(entries).each(function(index, value){
+                var prf_image = comment.baseurl+'images/stranger.jpg';
+                if(typeof(value.prf_image) != 'undefined' && value.prf_image != '')
+                    prf_image = value.prf_image;
+
+                var kk_flag = 'kiri';
+                if(value.prokontra == 'kontra')
+                    kk_flag = 'kanan';
+
+                var kirikanan= $('<div/>').addClass('col_6 '+kk_flag);
+                var indeks  = $('<div/>').addClass('indeks label'),
+                grid_row    = $('<div/>').addClass('grid_row');
+                $(indeks).append(grid_row);
+                var col_2   = $('<div/>').addClass('col_2'),
+                ratiobox    = $('<div/>').addClass('ratiobox'),
+                lqd         = $('<div/>').addClass('ratiobox_content lqd circle'),
+                img_        = $('<img/>').attr({src:prf_image, width:'50px'});
+                $(col_2).append(ratiobox.append(lqd.append(img_)));
+                $(grid_row).append(col_2);
+
+                var f12     = $('<div/>').addClass('col_10 pl10 f12'),
+                f14         = $('<div/>').addClass('f14 bold mb5').html(value.prf_name);
+                var datespan= $('<span/>').addClass('date fr mt5 ml10').html(tanggal.format(value.created));
+                $(f12).append(f14).append(value.cmt_text).append(datespan);
+                $(grid_row).append(f12);
+
+                $(kirikanan).append(indeks);
+                $(comrows).append(kirikanan);
+
+            })
+        }
+
+		return comrows;
+	},
+	textFocus : function (elm) {
+		if(parseInt(profile.islogin) <= 0) {
+			goLogin();
+			return false;
+		}
+
+		$(elm).css({
+	   		color : '#505050',
+		   'font-size': '13px',
+		   padding : '8px'
+		}).animate({
+	   		 height :'120px'
+		}),4000;
+
+		comment.resizeparent();
+	},
+	textBlur : function (elm) {
+		var num_char = $(elm).val().length;
+
+		if(parseInt(num_char) == 0) {
+			$(elm).css({
+			   color : '#bebebe',
+			   'font-size': '16px',
+			   padding : '10px'
+			}).animate({
+	   		 height :'64px'
+	   		});
+		}
+
+		comment.handleText(elm);
+		comment.resizeparent();
+	},
+	handleText : function (elm) {
+		var num_char = $(elm).val().length;
+
+		if(parseInt(num_char) > 2)
+			$(elm).closest('.box_dk').find('.btn_dk').prop('disabled', false);
+		else
+			$(elm).closest('.box_dk').find('.btn_dk').prop('disabled', true);
+	},
+	textReset : function (elm) {
+		$(elm).val('');
+		comment.textBlur(elm);
+	},
+	textCounter : function (elm) {
+		var dk_count = $(elm).parents("div").next(".dk_bot").find(".dk_count");
+		$(elm).limiter(500, dk_count);
+	},
+	scrollto : function (com_id, isTop) {
+		if(typeof(isTop) != 'undefined' && isTop == 'height') {
+			var total_top = parseInt(comment.parent_top) + parseInt(com_id);
+		}
+		else {
+			var com_top = $('#comment'+com_id).position().top;
+			var total_top = parseInt(comment.parent_top) + parseInt(com_top);
+		}
+
+		if(parseInt(total_top) > 0) {
+
+			$.postMessage(
+				'com_top'+total_top,
+	       		comment.parent_url,
+	       		parent
+	         );
+		}
+
+		setTimeout(function(){
+			$('.user_pic_bordered').removeClass('user_pic_bordered');
+			var list_dk = $('#comment'+com_id).closest('.list_dk');
+
+			if($(list_dk).hasClass('list_dk_sub')) // balasan
+				$(list_dk).find('.user_pic').addClass('user_pic_bordered');
+			else { // parent
+				var spans = $(list_dk).children();
+				$(spans[0]).addClass('user_pic_bordered');
+			}
+
+		},200);
+
+	},
+	sorting : function() {
+		if(parseInt(this.limit) < 1) {
+			return '';
+		}
+		//var sortby		= $('<div/>').addClass('sortby').html('<strong class="">Urutkan komentar:</strong>')
+		var sortby		= $('<div/>').addClass('sortby').html('')
+		var terbaru		= $('<a/>').addClass('terbaru').html('Terbaru');
+		var terlama		= $('<a/>').addClass('terlama').html('Terlama');
+		var terpopuler	= $('<a/>').addClass('terpopuler').html('Terpopuler');
+
+		var tsort		= this.tsort;
+
+		$(sortby).find('a').removeClass('selected');
+
+		if(tsort == 'newest')
+			$(terbaru).addClass('selected');
+		else if(tsort == 'oldest')
+			$(terlama).addClass('selected');
+		else if(tsort == 'rating')
+			$(terpopuler).addClass('selected');
+
+		$(terbaru).click(function (){
+			comment.tsort = 'newest';
+			comment.init(null, 1);
+		});
+		$(terlama).click(function (){
+			comment.tsort = 'oldest';
+			comment.init(null, 1);
+		});
+		$(terpopuler).click(function (){
+			comment.tsort = 'rating';
+			comment.init(null, 1);
+		});
+
+		$(sortby).append(terbaru).append(terlama).append(terpopuler);
+
+		return sortby;
+	},
+	prokonTab : function (data) {
+		var div_pk 		= $('<div/>').addClass('div_pk');
+		var tab_pro		= $('<div/>').addClass('prokon_tab bg_pro').html('&nbsp;&nbsp;&nbsp;PRO ('+data.counter_pro+')')
+							.click(function () {
+								comment.prokon_flag = 'pro';
+								comment.init(null, 1);
+							});
+		var tab_kon		= $('<div/>').addClass('prokon_tab bg_kontra').html('&nbsp;&nbsp;&nbsp;KONTRA ('+data.counter_kontra+')')
+							.click(function () {
+								comment.prokon_flag = 'kontra';
+								comment.init(null, 1);
+							});
+
+		$(div_pk).append(tab_pro).append(tab_kon);
+
+		return div_pk;
+	},
+	init : function(obj, start) {
+		var fp = false;
+		if(obj != null) {
+			comment.mandatoryfile(obj);
+
+			comment.target = obj.target; // isi object ==> obj : {url:'', target:''}
+
+			var urlget		= this.url;
+
+			if(typeof(obj.identifier) != 'undefined' && obj.identifier != '') {
+				urlget	+= '?get&key='+obj.identifier;
+				this.identifier = obj.identifier;
+				this.art_id		= this.identifier;
+			}
+			if(typeof(obj.group) != 'undefined' && obj.group != '') {
+				urlget	+= '&group='+obj.group;
+				this.group = obj.group;
+			}
+			if(typeof(obj.limit) == 'number') {
+				if(parseInt(obj.limit) > 1) {
+					urlget		+= '&limit='+obj.limit;
+					this.limit	= obj.limit;
+				}
+				else if(parseInt(obj.limit) == 0) { // custom seleksi menteri
+					urlget		+= '&limit='+obj.limit;
+					this.limit	= obj.limit;
+				}
+				else
+					this.log("Limit harus lebih dari 1");
+			}
+			if(typeof(obj.recaptcha) == 'boolean')
+				this.recaptcha = obj.recaptcha;
+
+			if(typeof(obj.date) != 'undefined' && obj.date != '') {
+				this.date	= obj.date;
+			}
+			if(typeof(obj.callBack) != 'undefined' && obj.callBack != '') {
+				this.callBack	= obj.callBack;
+			}
+			if(typeof(obj.url_share) != 'undefined' && obj.url_share != '') {
+				this.url_share	= obj.url_share;
+			}
+			else {
+				this.url_share	= obj.parent_url;
+			}
+			if(typeof(obj.appId) != 'undefined' && obj.appId != '') {
+				this.appId	= obj.appId;
+			}
+			if(typeof(obj.clientId) != 'undefined' && obj.clientId != '') {
+				this.clientId	= obj.clientId;
+			}
+			/*if(typeof(obj.css) != 'undefined' && obj.css != '') {
+				this.css	= obj.css;
+			}*/
+			if(typeof(obj.parent_url) != 'undefined' && obj.parent_url != '') {
+				this.parent_url	= obj.parent_url;
+				this.urlpage = obj.parent_url;
+			}
+
+			if(typeof(obj.title) == 'undefined' && obj.title != '') {
+				this.title		= document.title;
+			}
+			else {
+				if(obj.title == '')
+					this.title = document.title;
+				else
+					this.title = obj.title;
+			}
+
+			if(typeof(obj.ctop) != 'undefined') {
+				this.parent_top = obj.ctop;
+			}
+			if(typeof(obj.commentid) != 'undefined') {
+				this.cur_com = obj.commentid;
+			}
+			if(typeof(obj.view) != 'undefined') {
+				this.view = obj.view;
+			}
+			if(typeof(obj.complete) != 'undefined') {
+				this.complete = obj.complete;
+			}
+			if(typeof(obj.prefix) != 'undefined') {
+				this.prefix = obj.prefix;
+				if(obj.prefix != '')
+					urlget	+= '&pref='+obj.prefix;
+			}
+            if(typeof(obj.isNativeads) != 'undefined') {
+				this.isNativeads = obj.isNativeads;
+			}
+		}
+		else {
+			var urlget		= this.url;
+			urlget	+= '?get&key='+this.identifier;
+			urlget	+= '&group='+this.group;
+			if(this.prefix != '')
+				urlget	+= '&pref='+this.prefix;
+
+			urlget	+= '&start='+start;
+			urlget	+= '&limit='+this.limit;
+
+			fp = true;
+		}
+
+		var tsort	= 'newest';
+		tsort		= this.tsort;
+
+		if(parseInt(this.limit) < 1) {
+			urlget += '&sort='+tsort+'&date='+this.date+'&start=1&limit=0';
+		}
+		else {
+			if(parseInt(this.view) > 0)
+				urlget += '&sort='+tsort+'&date='+this.date+'&start=1&limit='+this.view;
+			else
+				urlget += '&sort='+tsort+'&date='+this.date;
+		}
+		if (parseInt(this.isProkontra) == 1) {
+				urlget += '&prokontra='+this.prokon_flag;
+		}
+        else if (parseInt(this.isProkontra) == 2) {
+				urlget += '&prokontra'
+		}
+
+        // Create form for the first time
+        if(fp === false) {
+            var combox = $('<div/>').addClass('combox')
+            var com_head = this.com_head(obj,0)
+            var comrows = $('<div/>').addClass('comrows')
+
+            var pagecenter = '';
+            if(this.isProkontra == 2)
+                pagecenter = ' text_center loading paging';
+    		var pagination	= $('<div/>').addClass('dk_page'+pagecenter);
+
+            $(combox).append(com_head).append(comrows).append(pagination)
+
+            $('#'+this.target).html(combox)
+
+            comment.resizeparent()
+        }
+
+		$.ajax({
+			url			: urlget,
+			type		: "GET",
+			dataType	:'json',
+			beforeSend	: function() {
+                var loader1 = comment.createloader('Sedang memuat komentar');
+				var loader2 = comment.createloader('loading');
+                var loader_ex = $('<div/>').attr({'style':'padding: 10px 0'}).append(loader1)
+
+				$('.comrows').html([loader_ex,loader2]);
+			},
+			success	: function(data){
+				//tools.alert('coba', JSON.stringify(data));
+				//setTimeout(function(){
+					comment.combox(data, fp);
+					comment.removeloader();
+				//}, 5000);
+				this.tsort = data.sorting;
+			},
+			error	: function (e) {
+				//comment.log("Request ajax gagal");
+				comment.removeloader();
+				setTimeout(function(){
+					var errInfo = $('<div/>').html('Gagal memuat komentar. Silahkan coba beberapa saat lagi')
+									.css({'background-color': '#FFF8C5', 'border': '1px solid #E0E904',
+											'color': '#AA2828', 'padding': '10px'});
+					$('#'+comment.target).html(errInfo);
+
+				},30000);
+			}
+		});
+	},
+	target : '',
+	log : function(msg) {
+		console.log(msg);
+	},
+	createloader : function(msg) {
+		var loading = $('<div/>').attr({id:'loading'}).css({'text-align':'center', margin: '0 auto'});
+		var text = 'loading';
+		if(typeof(msg) != 'undefined' && msg != '') text = msg;
+
+		if(text == 'loading') {
+			var lod_img = $('<div/>').addClass('spinner');
+			$(loading).html(lod_img);
+		}
+		else {
+			i = 0;
+			setInterval(function() {
+			    i = ++i % 4;
+			    $(loading).html(text+" "+Array(i+1).join("."));
+			}, 500);
+		}
+
+		return loading;
+	},
+	removeloader : function() {
+		if(typeof($('#loading')) != 'undefined')
+			$('#loading').remove();
+	},
+	createLoaderBar : function(elm, text) {
+		var box_dk	= $(elm).closest('.box_dk');
+		$(box_dk).find('.com_loader2').html(text);
+		$(box_dk).find('.info_loader').show();
+	},
+	removeLoaderBar : function (elm) {
+		var box_dk	= $(elm).closest('.box_dk');
+		$(box_dk).find('.com_loader2').html('');
+		$(box_dk).find('.info_loader').hide();
+	},
+	press : function(elm) {
+		comment.createLoaderBar(elm, 'sedang mengirim komentar anda');
+		var cmt_text	= $(elm).val();
+
+		if(parseInt(profile.islogin) <= 0) {
+			tools.alert('Warning ... ', 'Anda belum login !');
+			//goLogin();
+
+			$(elm).val(cmt_text);
+			comment.textFocus(elm);
+			comment.handleText(elm);
+
+			comment.removeLoaderBar(elm);
+
+			return false;
+		}
+
+		if(cmt_text.length < 3) {
+			tools.alert('Warning ... ', 'isi komentar tidak boleh kurang dari 3 karakter');
+
+			$(elm).val(cmt_text);
+			comment.textFocus(elm);
+			comment.handleText(elm);
+
+			comment.removeLoaderBar(elm);
+
+
+			return false;
+		}
+		else {
+			var urlpost = comment.url+'?add';
+			var identifier	= '';
+			var group	= '';
+			var art_id	= '';
+
+			if(this.identifier != '')
+				identifier	= this.identifier;
+			else {
+				this.log("Identifier tidak ditemukan");
+				this.warningError('Gagal posting (code 7x1)', 3000);
+			}
+			if(this.group != '')
+				group	= this.group;
+			else {
+				this.log("Group belum diset");
+				this.warningError('Gagal posting (code 7x2)', 3000);
+			}
+
+			if(this.art_id != '')
+				art_id	= this.art_id;
+			else {
+				this.log("Id artikel tidak ditemukan");
+				this.warningError('Gagal posting (code 7x3)', 3000);
+			}
+			if(this.date != '')
+				date	= this.date;
+			else {
+				this.log("Tanggal artikel kosong");
+				this.warningError('Gagal posting (code 7x6)', 3000);
+			}
+			if(this.title != '')
+				title	= this.title;
+			else {
+				this.log("Title tidak ditemukan");
+				this.warningError('Gagal posting (code 7x4)', 3000);
+			}
+			if(this.urlpage != '')
+				urlpage	= this.urlpage;
+			else {
+				this.log("url tidak ditemukan");
+				this.warningError('Gagal posting (code 7x5)', 3000);
+			}
+
+			var challengeField = '';
+		    var responseField = '';
+			if(this.recaptcha) {
+				challengeField = $("input#recaptcha_challenge_field").val();
+			    responseField = $("input#recaptcha_response_field").val();
+			}
+			var tw = 0;
+			var fb = 0;
+			var box_dk = $(elm).closest('.box_dk');
+			if($(box_dk).find('input[name="share_fb"]').is(':checked'))
+				fb = 1;
+			if($(box_dk).find('input[name="share_tw"]').is(':checked'))
+				tw = 1;
+
+			var attribute = {cmt_text:cmt_text, identifier: identifier, group:group, art_id: art_id, date: date, title: title, prefix: comment.prefix,
+		    				tw:tw, fb:fb, link: comment.url_share, recaptcha_challenge_field: challengeField, recaptcha_response_field: responseField,
+		    				appId:comment.appId, clientId: comment.clientId};
+
+			if (parseInt(this.isProkontra) > 0) {
+				//var prokon_label = 'pro';
+				attribute.prokontra = this.prokon_flag_post;
+			}
+
+			//alert(JSON.stringify(attribute));
+			//return
+			$.ajax({
+				url			: urlpost,
+				type		: "POST",
+				data		: attribute,
+				dataType	:'json',
+				beforeSend	: function() {
+					comment.createLoaderBar(elm, 'sedang mengirim komentar');
+
+					$(elm).val('');
+					comment.textReset(elm);
+				},
+				success	: function(data){
+					//alert(JSON.stringify(data));
+
+					if(data.error_flag <= 0) {
+						comment.removeLoaderBar(elm);
+                        if(comment.isProkontra == 2)
+                            comment.addRowHeadToHead(cmt_text.length, data);
+                        else
+						    comment.addRow(cmt_text.length, data);
+						if(fb > 0 || tw > 0)
+							comment.share(elm, attribute, data);
+
+
+						if(comment.callBack != '') {
+							comment.doCallBack(data.com_id, '', data);
+						}
+					}
+					else {
+						tools.alert('Warning ... ', data.error_msg);
+
+						// set the text back
+						$(elm).val(cmt_text);
+						comment.textFocus(elm);
+						comment.handleText(elm);
+					}
+
+					comment.removeLoaderBar(elm);
+				},
+				error	: function (e) {
+					comment.removeLoaderBar(elm);
+
+					tools.alert('Warning ... ', 'Gagal mengirimkan komentar. Lakukan beberapa saat lagi');
+					// set the text back
+					$(elm).val(cmt_text);
+					comment.textFocus(elm);
+					comment.handleText(elm);
+				}
+			});
+
+		}
+	},
+	addRow : function(length, entry, media_par){
+		if(typeof(entry) != 'undefined')
+			if(entry.com_id > 0)
+				var parent_id	= entry.com_id;
+			else {
+				this.log("Penyimpanan tidak sempurna");
+				return false;
+			}
+		else {
+			this.log("Penyimpanan tidak sempurna");
+			return false;
+		}
+
+		var comment_list = $('.comment_list');
+		var loader = comment.createloader('fetching comment');
+
+		if(typeof(media_par) != 'undefined' && $(media_par).html() != '') {
+			var media_cur = $(media_par).closest('.media');
+			// loader
+			$(media_cur).append(loader);
+		}
+		else {
+			var media	= $('<li/>').addClass('list_dk media');
+			$(comment_list).prepend(media);
+			// loader
+			$(media).html(loader);
+		}
+
+
+		var com_id		= '';
+		var prf_name	= '';
+		var prf_user	= '';
+		var replyto		= '';
+
+		if(typeof(entry.com_id) != 'undefined')
+			com_id	 = entry.com_id;
+		if(typeof(entry.prf_name) != 'undefined')
+			prf_name = entry.prf_name;
+		if(typeof(entry.prf_user) != 'undefined')
+			prf_user = entry.prf_user;
+
+		var prf_image = comment.baseurl+'images/stranger.jpg';
+		if(profile.image != '')
+			prf_image = profile.image;
+
+		if(typeof(entry.refer_com.prf_name) != 'undefined')
+			var replyto = '<span class="dk_date"> - tanggapan untuk <a class="nhclick" onclick="comment.scrollto('+entry.refer_com.com_id+')">'+entry.refer_com.prf_name+'</a></span>';
+
+		setTimeout(function(){
+			/**** */
+
+			var list_dk_sub		= $('<div/>').addClass('list_dk list_dk_sub');
+			var user_pic_		= $('<span/>').addClass('user_pic pull-left'),
+			img_n				= $('<img/>').attr({src:prf_image});
+
+			if(typeof(media_par) != 'undefined' && $(media_par).html() != '')
+				var nmedia		= $('<div/>').addClass('list_dk_text media-body').attr({id:'comment'+entry.com_id});
+			else
+				var nmedia		= $('<div/>').addClass('list_dk_text media-body mb_parent').attr({id:'comment'+entry.com_id});
+
+			var dk_name_	= $('<span/>').addClass('dk_name controls controls-row').html('<b>'+prf_name+' </b>'),
+			dk_user_		= $('<span/>').addClass('dk_name dk_user').html('@'+prf_user),
+			mid_dot_		= ' &#8226; ',
+			dk_date_		= $('<span/>').addClass('dk_date').html(tanggal.format(entry.created)),
+			dk_komen_		= $('<div/>').addClass('dk_komen').html(entry.cmt_text),
+			parent_id_		= $('<input/>').addClass('parent_id').attr({type: 'hidden'}).val(entry.com_id);
+			var clearfix_n	= $('<div/>').addClass('clearfix');
+
+			var reactions_	= '';
+			if(parseInt(comment.isQA) <= 0) {
+				if(parseInt(entry.nomod) > 0) {
+					reactions_	= comment.reactionElm(entry);
+				}
+				else if(parseInt(entry.nomod) <= 0) {
+					reactions_	= comment.reactionElm(entry, true);
+				}
+			}
+
+			var clearfix_	= $('<div/>').addClass('clearfix');
+			if(parseInt(entry.nomod) > 0)
+				var info_mod	= '';
+			else if(parseInt(entry.nomod) <= 0)
+				var info_mod	= $('<div/>').addClass('bx_nt').html('Komentar Anda akan melalui proses moderasi');
+
+			$(user_pic_).append(img_n);
+			$(nmedia).append(dk_name_).append(dk_user_).append(mid_dot_).append(dk_date_).append(replyto).append(dk_komen_).append(parent_id_).append(reactions_);
+
+			if(typeof(media_par) != 'undefined' && $(media_par).html() != '') {
+				// add child
+				$(list_dk_sub).append(user_pic_).append(nmedia).append(clearfix_n).append(info_mod);
+				// add to parent
+				$(media_cur).append(list_dk_sub);
+
+				// w7 - remove textarea after inserting new child
+				$(media_cur).find('.box_dk_balas').remove();
+				$(media_cur).find('.dk_balas').removeClass('buka');
+				// end of w7
+
+			}
+			else {
+				// add parent
+				$(media).append(user_pic_).append(nmedia).append(clearfix_).append(info_mod);
+			}
+
+			/**** */
+
+			comment.removeloader();
+
+			comment.resizeparent();
+
+		}, 1300);
+	},
+	addRowHeadToHead : function(length, entry){
+        if(typeof(entry) != 'undefined')
+			if(entry.com_id > 0)
+				var parent_id	= entry.com_id;
+
+		var comrows = $('.comrows');
+		var loader = comment.createloader('fetching comment');
+
+		// var media	= $('<div/>').addClass('col_6 kiri');
+
+        var kk_flag = 'kiri';
+        if(entry.prokontra == 'kontra')
+            kk_flag = 'kanan';
+
+        var kirikanan= $('<div/>').addClass('col_6 '+kk_flag);
+		//$(comment_list).prepend(media);
+        $(comrows).first().prepend(kirikanan);
+		// loader
+		$(kirikanan).html(loader);
+
+		var com_id		= '';
+		var prf_name	= '';
+		var prf_user	= '';
+		var replyto		= '';
+
+		if(typeof(entry.com_id) != 'undefined')
+			com_id	 = entry.com_id;
+		if(typeof(entry.prf_name) != 'undefined')
+			prf_name = entry.prf_name;
+		if(typeof(entry.prf_user) != 'undefined')
+			prf_user = entry.prf_user;
+
+		var prf_image = comment.baseurl+'images/stranger.jpg';
+		if(profile.image != '')
+			prf_image = profile.image;
+
+        setTimeout(function(){
+            var indeks  = $('<div/>').addClass('indeks label'),
+            grid_row    = $('<div/>').addClass('grid_row');
+            $(indeks).append(grid_row);
+            var col_2   = $('<div/>').addClass('col_2'),
+            ratiobox    = $('<div/>').addClass('ratiobox'),
+            lqd         = $('<div/>').addClass('ratiobox_content lqd circle'),
+            img_        = $('<img/>').attr({src:prf_image, width:'50px'});
+            $(col_2).append(ratiobox.append(lqd.append(img_)));
+            $(grid_row).append(col_2);
+
+            var f12     = $('<div/>').addClass('col_10 pl10 f12'),
+            f14         = $('<div/>').addClass('f14 bold mb5').html(prf_name);
+            var datespan= $('<span/>').addClass('date fr mt5 ml10').html(tanggal.format(entry.created));
+            $(f12).append(f14).append(entry.cmt_text).append(datespan);
+            $(grid_row).append(f12);
+
+            $(kirikanan).html(indeks);
+            //$(comrows).append(kirikanan);
+
+
+    		comment.removeloader();
+
+    		comment.resizeparent();
+
+		}, 1300);
+	},
+	reactionElm : function(data, disabled){
+		var ref_count = 0;
+		if(typeof(data.counter) != 'undefined')
+			ref_count	= data.counter;
+		var divreaction = $('<div/>').addClass('dk_action reaction'),
+		dk_balas		= $('<a/>').addClass('dk_balas').html('<span class="count">'+ref_count+'</span><span>Tanggapan</span>')
+							.click(function(){
+								if(disabled)
+									tools.alert('Warning ..', 'Komentar Anda sedang di moderasi');
+								else
+									comment.reqElmReaction(this); return false;
+							}),
+		dk_fav			= $('<a/>').addClass('dk_fav').html('<span class="count">'+data.like+'</span><span>Suka</span>')
+							.click(function(){
+								if(disabled)
+									tools.alert('Warning ..', 'Komentar Anda sedang di moderasi');
+								else {
+									if(parseInt(profile.islogin) <= 0)
+										goLogin();
+									else
+										comment.likeThis(this);
+								}
+							}),
+		to_share		= $('<a/>').addClass('to_share').html('<span>Bagikan</span>');
+
+		var fb_share	= $('<a/>').addClass('selm se_fb');//.click(function(){share.fbsharer(this)});//.attr({href:'https://www.facebook.com/sharer/sharer.php?u='+comment.parent_url});
+		var tw_share	= $('<a/>').addClass('selm se_tw').attr({href:'https://twitter.com/intent/tweet?url='+comment.url_share+'&text="'+data.cmt_text+'"',target:'__blank'});
+		var share_elm	= $('<span/>').addClass('share_elm').append(fb_share).append(' ').append(tw_share),
+		dk_flag			= $('<a/>').addClass('dk_flag').html('<span>Laporkan</span>')
+							.click(function(){
+								if(disabled)
+									tools.alert('Warning ..', 'Komentar Anda sedang di moderasi');
+								else {
+									if(parseInt(profile.islogin) <= 0)
+										goLogin();
+									else
+										comment.disLikeThis(this)
+								}
+							}),
+		clearfix_a		= $('<div/>').addClass('clearfix');
+
+		$(divreaction).append(dk_balas).append(dk_fav).append(to_share.append(share_elm)).append(dk_flag).append(clearfix_a);
+
+		if(disabled) {
+			$(to_share).click(function () {
+				tools.alert('Warning ..', 'Komentar Anda sedang di moderasi');
+			});
+		}
+		else {
+			$(to_share).mouseover(function () {
+				share.triggerTw(this, data);
+				dk_flag.hide();
+
+				$(this).mouseout(function(){
+					dk_flag.show();
+				});
+			});
+		}
+
+		return divreaction;
+	},
+	installCounter : function (refer_count) {
+		if(refer_count.length > 0) {
+			$(refer_count).each(function(index, value) {
+				//comment.log(value.com_id + ' , ' + value.numofreply);
+				comment.balasCounter(value.com_id, value.numofreply);
+			});
+		}
+	},
+	balasCounter : function (com_id, value, incr) {
+		//comment.log('#comment'+com_id +' '+value);
+		var count = $('#comment'+com_id).find('.dk_action').find('.dk_balas').find('.count');
+		var num_count = parseInt($(count).html());
+
+		if(typeof(incr) != 'undefined')
+			value	= num_count + 1;
+
+		$(count).html(value);
+	},
+	reactionText : function(tgr_balas) {
+		var box_dk_balas	= $('<div/>').addClass('box_dk box_dk_balas'),
+		text_komentar		= $('<div/>').addClass('text_komentar'),
+		txtcomment_rea		= $('<textarea/>').addClass('txtcomment_rea txtmention')
+								.attr({placeholder: comment.phwording, style:"color: rgb(190, 190, 190); font-size: 16px; padding: 10px; height: 64px;"})
+								.focus(function () {
+									comment.textFocus(this);
+									comment.textCounter(this);
+								})
+							    .blur(function(){
+								   comment.textBlur(this);
+							    })
+								.keyup(function(e) {
+									comment.handleText(this);
+									if (e.ctrlKey && e.keyCode == 13) {
+										comment.press(this);
+									}
+								});
+
+		var dk_bot		= $('<div/>').addClass('dk_bot'),
+		dk_count		= $('<span/>').addClass('dk_count').html(this.maxchar),
+		btn_send 		= $('<input/>').addClass('btn_dk fr').attr({type:'button'}).val('Kirim Komentar')
+							.prop('disabled', true)
+							.click(function(){
+								comment.pressChild(txtcomment_rea);
+							});
+
+		var clearfix_rea	= $('<div/>').addClass('clearfix');
+		var clearfix_ar		= $('<div/>').addClass('clearfix');
+
+
+		$(text_komentar).append(txtcomment_rea);
+		$(dk_bot).append(dk_count).append(btn_send).append(clearfix_rea);
+		$(box_dk_balas).append(text_komentar).append(dk_bot).append(clearfix_ar);
+
+		// recaptcha
+		if(this.recaptcha) {
+			var parent_id	= $(tgr_balas).closest('.media-body').find('.parent_id').val();
+			reCaptcha.addRecaptcha(box_dk_balas, 'mrecaptcha_'+parent_id);
+		}
+
+		return box_dk_balas;
+	},
+	reqElmReaction : function(tgr_balas) {
+		var rea_elm	= this.reactionText(tgr_balas);
+
+		if($(tgr_balas).hasClass('buka')) {
+			$(tgr_balas).removeClass('buka');
+		}
+		else {
+			$(tgr_balas).addClass('buka');
+			// mention untuk 'balas'
+			mention.exe(mention.users);
+		}
+
+
+		var mbody = $(tgr_balas).closest('.media-body');
+		//alert(typeof($(mbody).find('.box_dk_balas').html()));
+		if(typeof($(mbody).find('.box_dk_balas').html()) == 'undefined') {
+			$(mbody).append(rea_elm);
+			if(this.recaptcha) {
+				var controls = $('.divtext').find('.controls');
+				reCaptcha.addRecaptcha($(mbody).find('.box_dk_balas'), 'm_recaptcha');
+			}
+		}
+		else {
+			$(mbody).find('.box_dk_balas').remove();
+		}
+
+
+		comment.resizeparent();
+
+		return false;
+	},
+	pressChild : function(elm) {
+		var mediaself	= $(elm).closest('.media-body');
+		var mediabody	= $(elm).closest('.media').find('.mb_parent');
+		var parent_id	= $(mediabody).find('.parent_id').val();
+		var cmt_text	= $(elm).val();
+		var refer_id	= $(mediaself).find('.parent_id').val();
+
+		if(typeof(parent_id) != 'undefined' && parent_id.length <= 0) {
+			this.log("Parent tidak terdeteksi");
+			return false;
+		}
+		if(cmt_text.length < 3) {
+			tools.alert('Warning ... ', 'isi komentar tidak boleh kurang dari 3 karakter');
+			return false;
+		}
+		else {
+			var urlpost = comment.url+'?add';
+			var identifier	= '';
+			var group	= '';
+
+			if(this.identifier != '')
+				identifier	= this.identifier;
+			else {
+				this.log("Identifier tidak ditemukan");
+				this.warningError('Gagal posting (code 7bx1)', 3000);
+			}
+			if(this.group != '')
+				group	= this.group;
+			else {
+				this.log("Group belum diset");
+				this.warningError('Gagal posting (code 7bx2)', 3000);
+			}
+
+			if(this.art_id != '')
+				art_id	= this.art_id;
+			else {
+				this.log("Id artikel tidak ditemukan");
+				this.warningError('Gagal posting (code 7cx3)', 3000);
+			}
+			if(this.date != '')
+				date	= this.date;
+			else {
+				this.log("Tanggal artikel kosong");
+				this.warningError('Gagal posting (code 7cx6)', 3000);
+			}
+			if(this.title != '')
+				title	= this.title;
+			else {
+				this.log("Title tidak ditemukan");
+				this.warningError('Gagal posting (code 7cx4)', 3000);
+			}
+			if(this.urlpage != '')
+				urlpage	= this.urlpage;
+			else {
+				this.log("url tidak ditemukan");
+				this.warningError('Gagal posting (code 7cx5)', 3000);
+			}
+
+			var challengeField = '';
+		    var responseField = '';
+			if(this.recaptcha) {
+				challengeField = $("input#recaptcha_challenge_field").val();
+			    responseField = $("input#recaptcha_response_field").val();
+			}
+
+			var attribute = {cmt_text:cmt_text, identifier: identifier, group:group, art_id: art_id, date: date, title: title,
+							prefix: comment.prefix,link: comment.parent_url, parent: parent_id, refer: refer_id,
+							recaptcha_challenge_field: challengeField, recaptcha_response_field: responseField,
+							appId:comment.appId, clientId: comment.clientId};
+
+			//return alert(parent_id);
+			$.ajax({
+				url			: urlpost,
+				type		: "POST",
+				data		: attribute,
+				dataType	:'json',
+				beforeSend	: function() {
+					$(elm).val('');
+					comment.textReset(elm);
+				},
+				success	: function(data){
+					//alert(JSON.stringify(data));
+					if(this.recaptcha)
+						reCaptcha.reload();
+
+					if(data.error_flag <= 0) {
+						comment.addRow(cmt_text.length, data, mediabody);
+
+						if(comment.callBack != '')
+							comment.doCallBack(data.com_id);
+					}
+					else {
+						tools.alert('Warning ...', data.error_msg);
+
+						// set the text back
+						$(elm).val(cmt_text);
+						comment.textFocus(elm);
+						comment.handleText(elm);
+					}
+				},
+				error	: function (e) {
+					//comment.log("Posting ajax child gagal");
+
+					// set the text back
+					$(elm).val(cmt_text);
+					comment.textFocus(elm);
+					comment.handleText(elm);
+				}
+			});
+
+		}
+
+	},
+	likeThis : function (elm) {
+		var urllike	= this.url+'?like=up';
+		var com_id	= $(elm).closest('.media-body').find('.parent_id').val();
+		var identifier = this.identifier;
+		var prf_id	= profile.id;
+		var group = comment.group;
+		var isparent = $(elm).closest('.mb_parent').find('.parent_id').val();
+		var parent_id	= 0;
+		if(parseInt(isparent) != parseInt(com_id))
+			parent_id = isparent;
+
+		$.ajax({
+			url			: urllike,
+			type		: "POST",
+			data		: {prf_id:prf_id, com_id:com_id, identifier:identifier, group: group, prefix: comment.prefix},
+			dataType	:'json',
+			beforeSend	: function() {
+                var curFav = $(elm).find('.count').html()
+                plusFav = parseInt(curFav) + 1
+                $(elm).find('.count').html(plusFav)
+			},
+			success	: function(data){
+				//alert(JSON.stringify(data));
+				if(data.error_flag <= 0) {
+					//$(elm).closest('.reatbl').find('.td_up').html(data.like);
+					$(elm).find('.count').html(data.like);
+					if(comment.callBack != '') {
+						comment.doCallBack(com_id, 'like');
+					}
+				}
+				else {
+                    var curFav = $(elm).find('.count').html()
+                    minFav = parseInt(curFav) - 1
+                    $(elm).find('.count').html(minFav);
+					tools.alert('Warning ...', data.error_msg);
+                }
+			},
+			error	: function (e) {
+				comment.log("error code 244");
+			}
+		});
+	},
+	disLikeThis : function (elm) {
+		var urllike	= this.url+'?like=down';
+		var com_id	= $(elm).closest('.media-body').find('.parent_id').val();
+		var identifier = this.identifier;
+		var prf_id	= profile.id;
+
+		//comment.log({prf_id:prf_id, com_id:com_id, identifier:identifier});
+		$.ajax({
+			url			: urllike,
+			type		: "POST",
+			data		: {prf_id:prf_id, com_id:com_id, identifier:identifier},
+			dataType	:'json',
+			beforeSend	: function() {
+			},
+			success	: function(data){
+				//alert(JSON.stringify(data));
+				if(data.error_flag <= 0) {
+					tools.alert('Info', 'Terimakasih');
+
+					if(comment.callBack != '') {
+						comment.doCallBack(com_id, 'dislike');
+					}
+				}
+				else
+					tools.alert('Warning ...', data.error_msg);
+
+			},
+			error	: function (e) {
+				comment.log("error code 245");
+			}
+		});
+	},
+	shareThis : function (elm) {
+		var media_id	= $(elm).closest('.media-body').attr('id');
+		$.postMessage(
+			media_id,
+       		comment.parent_url,
+       		parent
+         );
+	},
+	seeDetail : function () {
+		var see_href = comment.parent_url;
+		see_href	= see_href.replace("/read/","/comment/");
+		if(comment.prefix == 'cnn') {
+			var last_char = see_href.substr(-1);
+			if(comment.complete != '') {
+				var extra_slash = '';
+				if(last_char != '/')
+					extra_slash = '/';
+
+				see_href = see_href+extra_slash+comment.complete;
+			}
+		}
+
+		var dk_see = $('<div/>').addClass('dk_page').html('<a target="_parent" href="'+see_href+'" class="red_a">Selengkapnya</a>');
+
+		return dk_see;
+	},
+	createPage : function(combox, data) {
+		// var pagination	= $('<div/>').addClass('dk_page'+pagecenter);
+
+        var pagination  = $('.dk_page').html('')
+		var limit		= parseInt(this.limit)
+		var pages		= data.pages
+		var p_activ		= pages.page
+		var numpages	= 0
+
+		if(typeof(pages.numpages) == 'number')
+			numpages	= pages.numpages;
+
+		if(numpages <= 1)
+			return false;
+
+		var arow		= 5;
+		var inrow		= Math.ceil(parseInt(p_activ)/parseInt(arow));
+		var totalrow	= Math.ceil(parseInt(numpages)/parseInt(arow))
+
+		var minpage	= (parseInt(inrow) * parseInt(arow)) - parseInt(4);
+		var maxpage	= (parseInt(inrow) * parseInt(arow));
+
+		if(typeof(data.counter) != 'number') {
+			this.log("Page bukan berupa number");
+			return false;
+		}
+
+		var page_first	= '',
+		page_prev		= '',
+		page_last		= '',
+		page_last		= '';
+
+		if(inrow > 1) {
+			var prevrow	= minpage - 1;
+			page_first		= $('<a/>').addClass('pn').attr({href:'#page=1'}).html('First');
+			$(page_first).click(function(){comment.clickpage(parseInt(prevrow)); return false;});
+			if(typeof(pages.prev) == 'number') {
+				page_prev		= $('<a/>').attr({href:'#page='+parseInt(prevrow)}).html('<<');
+				$(page_prev).click(function(){comment.clickpage(parseInt(prevrow)); return false;});
+			}
+			$(pagination).append(page_first).append('&nbsp;').append(page_prev).append('&nbsp;');
+		}
+
+		var p = minpage;
+		var limitloop	= maxpage;
+		if(maxpage > numpages)
+			limitloop = numpages;
+		for(var p= minpage; p <= limitloop; p++) {
+			if(p == p_activ)
+				var page_a	= $('<a/>').addClass('selected').html(p_activ);
+			else {
+				var np	= p;
+				var page_a = $('<a/>').attr({href:'#page='+p, onclick: "comment.clickpage("+np+"); return false;"}).html(p);
+
+			}
+
+			$(pagination).append(page_a).append('&nbsp;');
+
+		}
+
+
+		if(totalrow > inrow) {
+			var nextrow = maxpage + 1;
+			if(typeof(pages.next) == 'number') {
+				page_next	= $('<a/>').addClass('page gradient').attr({href:'#page='+parseInt(nextrow)}).html('>>');
+				$(page_next).click(function(){comment.clickpage(parseInt(nextrow)); return false;});
+			}
+			if(typeof(pages.lastpage) == 'number') {
+				page_last	= $('<a/>').addClass('pn').attr({href:'#page='+parseInt(pages.lastpage)}).html('Last');
+				$(page_last).click(function(){comment.clickpage(parseInt(pages.lastpage)); return false;});
+			}
+			$(pagination).append(page_next).append('&nbsp;').append(page_last).append('&nbsp;');
+		}
+
+		// $(combox).append(pagination);
+	},
+	clickpage : function(p) {
+		this.setPage(p);
+
+		var page = this.page;
+		//alert(p+'===='+page);
+		if(page > 0)
+			this.goPage(page);
+	},
+	setPage	: function(p) {
+		this.page	= parseInt(p);
+	},
+	goPage	: function(p) {
+		comment.scrollto(209, 'height');
+		this.init(null, p);
+	},
+	share : function(elm, attribute, data) {
+		if(parseInt(profile.islogin) <= 0) {
+			tools.alert('Warning ... ', 'Anda belum login !');
+			return false;
+		}
+
+		var urlpost = comment.url+'Share';
+	    var attribute_ex = {cmt_text:attribute.cmt_text, identifier: attribute.identifier, group:attribute.group, art_id: attribute.art_id,
+	    			link: attribute.link, date: attribute.date, tw:attribute.tw, fb:attribute.fb, title: attribute.title, com_id:data.com_id};
+		//comment.log(JSON.stringify(attribute));
+		//comment.log(JSON.stringify(attribute_ex));
+	    var loaderText	= '';
+	    if(attribute_ex.tw > 0)
+	    	loaderText = 'Posting twitter';
+	    if(attribute_ex.fb > 0)
+	    	loaderText = 'Posting facebook';
+	    if(attribute_ex.tw > 0 && attribute_ex.fb > 0)
+	    	loaderText = 'Posting twitter dan facebook';
+
+		$.ajax({
+			url			: urlpost,
+			type		: "POST",
+			data		: attribute_ex,
+			dataType	:'json',
+			beforeSend	: function() {
+				comment.createLoaderBar(elm, 'Posting twitter dan facebok');
+			},
+			success	: function(data){
+				//alert(JSON.stringify(data));
+				if(data.error_flag <= 0) {
+					comment.removeLoaderBar(elm);
+					comment.createLoaderBar(elm, 'Berhasil..');
+					setTimeout(function(){
+						comment.removeLoaderBar(elm);
+					}, 1000);
+				}
+				else {
+					//tools.alert('Warning ... ', data.error_msg);
+				}
+
+			},
+			error	: function (e) {
+				comment.removeLoaderBar(elm);
+				comment.log("share fb n tweet gagal");
+				tools.alert('Warning ... ', 'Gagal posting ke twitter/fb anda. Lakukan beberapa saat lagi');
+			}
+		});
+		comment.removeLoaderBar(elm);
+
+	},
+	doCallBack : function(total, type, data) {
+		var second = '';
+		if(typeof(type) != 'undefined')
+			second = '||'+type;
+
+		var data_ex = '';
+		if(typeof(data) == 'object')
+			data_ex = '||'+JSON.stringify(data);
+
+		if(comment.callBack != '') {
+			$.postMessage(
+				'callback|'+comment.callBack+'||'+total+second+data_ex,
+	       		comment.parent_url,
+	       		parent
+	         );
+		}
+	},
+	warningError : function(text, duration){
+		var spanerror	= $('<span/>').css({'color':'red'}).html(text);
+		$('.divtext').append(spanerror);
+
+		if(typeof(duration) != 'undefined' && duration > 0) {
+			setTimeout(function(){
+				$(spanerror).hide(500);
+				$(spanerror).remove();
+			}, duration);
+		}
+
+	}
+};
+
+$(document).ready(function(){
+	$('#ngarang').click(function(){
+		tools.alert();
+	});
+});
+
+var tools = {
+	mod_id : 'myModal',
+	create : function(title, content) {
+		var modal	= $('<div/>').addClass('modal fade')
+						.attr({id:tools.mod_id, tabindex:'-1', role:"dialog", 'aria-labelledby':"myModalLabel",'aria-hidden':"true"}),
+		modal_dialog	= $('<div/>').addClass('modal-dialog'),
+		modal_content	= $('<div/>').addClass('modal-content'),
+		modal_header	= $('<div/>').addClass('modal-header'),
+		button			= $('<button/>').addClass('close').attr({type:'button', 'data-dismiss':"modal", 'aria-hidden':"true"}).html('&times;'),
+		modal_title		= $('<h4/>').html(title),
+		modal_body		= $('<div/>').addClass('modal-body').html(content),
+		modal_footer	= $('<div/>').addClass('modal-footer'),
+		button_close	= $('<button/>').addClass('btn btn-default').attr({type:'button', 'data-dismiss':"modal"}).html('Close'),
+		button_custom	= $('<button/>').addClass('btn btn-primary').attr({type:'button', 'data-dismiss':"modal"}).html('Custom button');
+
+		$(modal_header).append(button).append(modal_title);
+		$(modal_footer).append(button_close).append(button_custom);
+		$(modal).append(modal_dialog.append(modal_content).append(modal_header).append(modal_body).append(modal_footer));
+
+		$('body').append(modal);
+		if($('.modal-body').html() != 'undefined')
+			$('.modal-body').html(content);
+
+
+		$('#myModal').modal({
+		  keyboard: false
+		})
+
+
+	},
+	alert : function(title, content) {
+		alert(content);
+		//this.create(title, content);
+
+	},
+	stringBetween : function(data, separator1, separator2) {
+		var start_pos = data.indexOf(separator1) + parseInt(separator1.length);
+		var end_pos = data.indexOf(separator2,start_pos);
+		var text_to_get = data.substring(start_pos,end_pos);
+
+		return text_to_get;
+	}
+}
+
+var reCaptcha = {
+	public_key	: '6Lf5r-USAAAAAI0E0nAslUSVlXpVaDAzwWG-fZ88',
+	recreate	: function (target) {
+        Recaptcha.create(this.public_key, target, {
+        	tabindex: 1,
+        	theme: "clean",
+        	callback: Recaptcha.focus_response_field
+        });
+	},
+  	addRecaptcha : function (source, id) {
+	  var divrcha		= $('<div/>').attr({id:id});
+	  $(source).after(divrcha);
+
+	  setTimeout(function(){
+		  reCaptcha.recreate(id);
+	  }, 100);
+
+	},
+	validateCaptcha : function () {
+	    challengeField = $("input#recaptcha_challenge_field").val();
+	    responseField = $("input#recaptcha_response_field").val();
+
+	    //var temp_url = comment.baseurl+"ajax.recaptcha.php";
+	    var temp_url = comment.url+"?validate";
+
+	    var html = $.ajax({
+	    type: "POST",
+	    url: temp_url,
+	    data: {recaptcha_challenge_field: challengeField, recaptcha_response_field: responseField},
+	    async: false
+	    }).responseText;
+
+	    if (html.replace(/^\s+|\s+$/, '') == "success")
+	    {
+	        return 1;
+	    }
+	    else
+	    {
+	        //alert('didnt match');
+	        Recaptcha.reload();
+	        return 0;
+	    }
+	},
+	reload : function() {
+		Recaptcha.reload();
+	}
+
+};
+
+var mention = {
+	users : {},
+	exe : function(users, elm) {
+		setTimeout(function(){
+			$('.txtmention').mention({
+		        users: users
+		    });
+		}, 200);
+	},
+
+	getUser : function () {
+		var ajaxurl = comment.url+'?mention&mkey='+comment.identifier;
+
+		$.ajax({
+			url			: ajaxurl,
+			type		: "GET",
+			dataType	:'json',
+			beforeSend	: function() {
+
+			},
+			success	: function(data){
+				//alert(JSON.stringify(data));
+				mention.users = data;
+				mention.exe(data);
+			},
+			error	: function (e) {
+				comment.log("Request ajax gagal 75x83");
+			}
+		});
+	}
+}
+
+var profile	= {
+	islogin	: 0,
+	id : '',
+	name : '',
+	fullname : '',
+	image : '',
+	getData : function (data) {
+		if (data != '') {
+			profile.islogin = 1;
+			profile.id = data.prf_id;
+			profile.name = data.prf_name;
+			profile.fullname = data.prf_fullname;
+			profile.image = data.prf_image;
+		}
+		else {
+			comment.phwording = "Silahkan login untuk menulis komentar";
+			$('#txtcomment').attr({placeholder: comment.phwording});
+		}
+	}
+}
+
+var share = {
+	triggerTw : function (elm, data) {
+
+		var com_id	= "comment"+data.com_id;
+		var text	= data.cmt_text;
+		if(text != null) {
+			if(text.length > 90)
+				text = text.substring(0, 90);
+
+			text	= '"'+text+'"';
+			text	+= '... - ' + data.prf_name;
+		}
+
+		var fb_url	= comment.url_share+'#com_id';
+		var shorturl = comment.url+'?com_id='+data.com_id+'&callback'+'&detikurl='+comment.url_share;
+
+		$(elm).find('.share_elm').find('.se_fb')
+		.click(function(){
+			share.fbsharer(elm, 'https://www.facebook.com/sharer/sharer.php?u='+fb_url+'&title='+comment.title+'&p='+data.cmt_text);
+		});
+
+        isSorted = $(elm).find('.share_elm').find('.se_tw').attr('data-sorted')
+        if(typeof(isSorted) != 'undefined') {
+            // skip
+        }
+        else {
+
+    		$.ajax({
+    			url			: shorturl,
+    			type		: "GET",
+    			dataType	:'jsonp',
+    			beforeSend	: function() {
+    			},
+    			success	: function(res){
+    				var dataurl = res.short;
+    				//$(elm).find('.share_elm').find('.se_fb').attr({href:'https://www.facebook.com/sharer/sharer.php?u='+dataurl})
+
+    				$(elm).find('.share_elm').find('.se_tw').attr({href:'https://twitter.com/intent/tweet?url='+dataurl+'&text="'+data.cmt_text+'"', target:'__blank', 'data-sorted':1});
+    			},
+    			error	: function (e) {
+    			}
+    		});
+        }
+
+		$(elm).find('.share_elm').show();
+		$(elm).mouseout(function(){
+			$(this).find('.share_elm').hide();
+		});
+	},
+	fbsharer : function (elm, url) {
+		window.open(url
+				, 'sharer'
+				, 'toolbar=0,status=0,width=526,height=286');
+	},
+	twitter : function (source, data) {
+
+		var com_id	= "comment"+data.com_id;
+		var text	= data.cmt_text;
+		//alert(text.length);
+		if(text != null) {
+			if(text.length > 90)
+				text = text.substring(0, 90);
+
+			text	= '"'+text+'"';
+			text	+= '... - ' + data.prf_name;
+		}
+
+		var shorturl = comment.url+'?com_id='+data.com_id+'&callback'+'&detikurl='+comment.url_share;
+
+		$.ajax({
+			url			: shorturl,
+			type		: "GET",
+			dataType	:'jsonp',
+			beforeSend	: function() {
+				//alert('before');
+			},
+			success	: function(data){
+				//alert(JSON.stringify(data));
+				alert(data.short);
+				var dataurl = data.short;
+				var tw_button = $('<a/>').addClass('twitter-share-button').attr({href:"https://twitter.com/share",
+								'data-text': text, 'data-url': dataurl,
+								'data-counturl': dataurl,
+								'data-lang': "en",
+								'data-count': "none"}).html('<img src="/images/bird_32_black.png" alt="Tweet" />');
+
+				//share_elm		= $('<span/>').addClass('share_elm').html('<a class="selm">&nbsp;</a>');//.append(tw_button),
+				$(source).append(tw_button);
+
+				twttr.widgets.load();
+			},
+			error	: function (e) {
+			}
+		});
+
+	},
+	render : function() {
+		twttr.widgets.load();
+	},
+	coba : function(source) {
+		var tw_button = $('<a/>').addClass('twitter-share-button').attr({href:"https://twitter.com/share",
+			'data-text': "Pertamax gan!",
+			'data-via': 'detikcom', 'data-counturl': "http://groups.google.com/group/twitter-api-announce",
+			'data-lang': "en",
+			'data-count': "none"}).html('Tweet');
+
+		$(source).append(tw_button);
+
+		this.render();
+
+		$(source).find('.twitter-share-button').remove();
+	},
+	fb_trigger : function(source, data) {
+		/*
+		var fbshare = $('<img/>').addClass('fbshare').attr({src:comment.baseurl+'images/fbshare.gif'}).bind('click', function(){
+			share.facebook(data)
+		});
+		*/
+		var fbshare = $('<img/>').addClass('fbshare').attr({src:comment.baseurl+'images/fbshare.gif'}).bind('click', function(){
+			window.open("http://facebook.com/sharer/sharer.php?u="+comment.url_share);
+		});
+
+		$(source).append(fbshare);
+	},
+	facebook : function(data) {
+		//alert(data.cmt_text);
+		FB.init({
+		    appId: '187960271237149',
+		    status: true,
+		    cookie: true,
+		    xfbml: true
+		});
+
+		var fb_attr = comment.fb_attr.split('|:-:|');
+		var fb_img	= fb_attr[0];
+		var fb_text	= fb_attr[1];
+
+		FB.ui(
+			{
+		         method: 'feed',
+		         name: comment.title,
+		         link: comment.url_share,
+		         picture: 'http://images.detik.com/community/uploads/2013/08/28/c3a8f474c839037dfa832873f328b44b.jpg',
+		         //picture: fb_img,
+		         caption: data.cmt_text,
+		         description: fb_text,
+		         message: ' '
+		    },
+		    function(response) {
+	         	if (response && response.post_id) {
+	        		//alert('Post was published.');
+	        	} else {
+	        		//alert('Post was not published.');
+	        	}
+		    }
+		);
+
+	}
+}
+
+var tanggal = {
+	format	: function (value){
+		var result = '';
+
+		if(parseInt(value) > 0) {
+			result = this.timestampToDateTime(value, 0 * 60 * 60);
+		}
+		else {
+			comment.log('Tidak lebih dari nol');
+			return '';
+		}
+
+		return result;
+	},
+	timestampToDateTime : function (value, offset) {
+		var now	= Math.round(parseInt(new Date().getTime() / 1000))
+		var temp = (now + offset) - value;
+		//temp = temp + (86400*7);
+		//alert(now + ' - ' + value + ' = ' + temp);
+
+		if (parseInt(temp) < 0)
+			return 'beberapa saat yang lalu';
+		else if (parseInt(temp) < 86400 * 7) {
+			if (parseInt(temp) < 60)
+				return 'beberapa saat yang lalu';
+			else if (parseInt(temp) > 60 && parseInt(temp) < 3600) {
+				return Math.ceil(parseInt(temp) / 60) + ' menit yang lalu';
+			}
+			else if (parseInt(temp) >= 3600 && parseInt(temp) < 86400)
+				return Math.ceil(parseInt(temp) / 3600) + ' jam yang lalu';
+			else if (parseInt(temp) >= 86400 && parseInt(temp) <= (86400*2) )
+				return 'kemarin';
+			else if (parseInt(temp) > 86400 && parseInt(temp) < (86400*7)) // jadinya jarang untuk dapat '2 hari yang lalu'
+				return Math.ceil(parseInt(temp) / 86400) + ' hari yang lalu';
+		}
+
+		var unixtimestamp	= now - (temp);
+		var timeofvalue = new Date(unixtimestamp*1000); // tambahkan 1000 utk format timestamp
+
+		var dayofweek	= timeofvalue.getDay();
+		switch (dayofweek) {
+			case 1:
+				var dayofweekname = 'Senin'; // monday
+				break;
+			case 2:
+				var dayofweekname = 'Selasa'; // tuesday
+				break;
+			case 3:
+				var dayofweekname = 'Rabu';
+				break;
+			case 4:
+				var dayofweekname = 'Kamis';
+				break;
+			case 5:
+				var dayofweekname = 'Jumat';
+				break;
+			case 6:
+				var dayofweekname = 'Sabtu';
+				break;
+			case 7:
+				var dayofweekname = 'Minggu';
+				break;
+			default:
+				var dayofweekname = '';
+		}
+
+		var month = timeofvalue.getMonth() + 1;	// tambah 1 karena monthnya dimulai dari 0
+		switch (month) {
+			case 1:
+				var monthname = 'Januari'; // January
+				break;
+			case 2:
+				var monthname = 'Februari';
+				break;
+			case 3:
+				var monthname = 'Maret';
+				break;
+			case 4:
+				var monthname = 'April';
+				break;
+			case 5:
+				var monthname = 'Mei';
+				break;
+			case 6:
+				var monthname = 'Juni';
+				break;
+			case 7:
+				var monthname = 'Juli';
+				break;
+			case 8:
+				var monthname = 'Agustus';
+				break;
+			case 9:
+				var monthname = 'September';
+				break;
+			case 10:
+				var monthname = 'Oktober';
+				break;
+			case 11:
+				var monthname = 'November';
+				break;
+			case 12:
+				var monthname = 'Desember';
+				break;
+			default:
+				var monthname = '';
+		}
+
+		if (parseInt(dayofweekname) > 0)
+			dayofweekname += ', ';
+
+		if (parseInt(month) > 0)
+			monthname = ' ' + monthname + ' ';
+		else
+			monthname = ' ';
+
+		var formated	=	dayofweekname + ', ' + timeofvalue.getDate() + ' ' + monthname + ' ' +
+							timeofvalue.getFullYear() + ' | ' + timeofvalue.getHours() + ':' +
+							timeofvalue.getMinutes();
+
+		return formated;
+	}
+}
+
+String.prototype.fulltrim = function(){
+	return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
+};
+
+var dtkAds = {
+	nativeAdsCB: function(r, index, impression)
+    {
+		var divpos = dtkAds.getPositionDiv(index);
+
+		if (r.success) {
+			$('#nativeads_'+divpos).html(r.code);
+			if (typeof(impression) != 'undefined') {
+				var imgImprs = $('<img/>').attr({src:impression, width:'1px',height:'1px'}).css({width:'1px',height:'1px'});
+				$('#nativeads_'+divpos).append(imgImprs);
+			}
+
+			comment.resizeparent();
+        }
+    },
+	getPositionDiv: function(index) {
+		var result = '';
+		if (index ==1)
+			result = 1*comment.p_activ;
+		else if (index == 2)
+			result = 6*comment.p_activ;
+		else if (index == 3)
+			result = 1*comment.p_activ;
+		else if (index == 4)
+			result = 6*comment.p_activ;
+		else if (index == 5)
+			result = 1*comment.p_activ;
+		else if (index == 6)
+			result = 6*comment.p_activ;
+		else if (index == 7)
+			result = 1*comment.p_activ;
+		else if (index == 8)
+			result = 6*comment.p_activ;
+		else if (index == 9)
+			result = 1*comment.p_activ;
+		else if (index == 10)
+			result = 6*comment.p_activ;
+
+		return result;
+	}
+}

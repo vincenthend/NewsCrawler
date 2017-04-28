@@ -1,0 +1,213 @@
+var mood = {
+    height : '386',
+	content : '',
+	elm_target : '',
+	data : '',
+	baseurl : 'https://mood.detik.com/',
+	ismobile : 0,
+    create : function(data) {
+		var idkanal = 0,
+        idnews      = 0,
+        title       = '',
+		idsubkanal	= 0,
+		idfokus		= 0,
+		idmicrosite	= 0,
+		ismobile	= 0,
+        userAgent   = 0,
+		appid		= 0,
+        date        = '';
+
+        if (typeof data.target !== 'undefined')
+            mood.elm_target = data.target;
+
+        if (typeof data.idkanal !== 'undefined')
+            idkanal = data.idkanal;
+        if (typeof data.idnews !== 'undefined')
+            idnews = data.idnews;
+        if (typeof data.title !== 'undefined')
+            title = data.title;
+		if (typeof data.idsubkanal !== 'undefined')
+            idsubkanal = data.idsubkanal;
+        if (typeof data.idfokus !== 'undefined')
+            idfokus = data.idfokus;
+		if (typeof data.idmicrosite !== 'undefined')
+            idmicrosite = data.idmicrosite;
+        if (typeof data.appid !== 'undefined')
+            appid = data.appid;
+		if (typeof data.ismobile !== 'undefined')
+			ismobile = mood.ismobile = data.ismobile;
+        if (typeof data.date !== 'undefined')
+            date    = data.date;
+
+		var article_url = document.URL;
+        data.article_url = article_url;
+        var par_obj = JSON.stringify(data);
+
+        var params   = '#idkanal='+idkanal+'||idnews='+idnews+'||title='+encodeURIComponent(title)+
+						'||article_url='+encodeURIComponent(article_url)+'||idsubkanal='+idsubkanal+'||idfokus='+idfokus+
+						'||idmicrosite='+idmicrosite+'||appid='+appid+'||ismobile='+ismobile+'||date='+date;
+		var elm_frame = $('<iframe/>').attr({allowtransparency:'true', frameborder:'0', role:'complementary', width : '100%', id:'moodframe',
+			scrolling:'no', horizontalscrolling:'no', verticalscrolling:'no', src:mood.baseurl+'display/datalayer/mood.php'+params})
+			.attr({'style': 'width: 100% !important; border: none !important; overflow: hidden !important; height: '+mood.height+'px !important'})
+			.css({width : '100% !important', border:'none !important', overflow:'hidden !important', height: mood.height+'px'});
+
+		$('#'+mood.elm_target).html(elm_frame);
+    },
+	easyCross : function (data, domain) {
+		console.log(data);
+		if(data.substring(0,7) == 'gologin') {
+			mood.goLogin();
+		}
+	},
+	goLogin : function () {
+		alert('asssss');
+	},
+	layout : function() {
+
+		//if (mood.ismobile > 0) {
+		//	$('.to_login_m').find('a')[0].click();
+		//}
+		//else {
+			if ($('.user_login').html() == 'undefined' || $('.user_login').html() == null) {
+				// $('.to_login').trigger('click');
+        var triggered = 0;
+				$('.to_login').each(function(index, value) {
+
+					if (!$(this).hasClass('notrigger') && triggered ==0) {
+						triggered = 1;
+						$(this).trigger('click');
+
+					}
+				});
+
+				$('.calldc').trigger('click');
+			}
+			else {
+				if (typeof($('#kanal_detik').html()) != 'undefined') {
+					$('.logreg')[0].click();
+					return;
+				}
+				$('.user_login').find('a')[0].click();
+			}
+		//}
+
+	},
+	resize  : function (val) {
+		$('#moodframe').attr({'style':'width: 100% !important; border: none !important; overflow: hidden !important; height:'+val+'px !important;'});
+		$('#moodframe').css({height:val+'px'});
+		$('#'+mood.elm_target).attr({'style':'overflow:hidden !important'});
+	}
+}
+
+$(document).ready(function(e){
+		var rm_comment = function(e) {
+			var data = e.data;
+
+			if(data.substring(0,6) == 'height') {
+   				//console.log('height : ' + data);
+   				var height = data.split(':')[1];
+   				comment.resize(height);
+   			}
+   			else if(data.substring(0,7) == 'comment') {
+				comment.shareIt(data);
+			}
+   			else if (data.substring(0, 10) == 'closeframe')
+   				comment.popup_close();
+   			else if (data.substring(0, 7) == 'com_top')
+   				comment.position(data);
+   			else if(data.substring(0,5) == 'login') {
+				// Turn off sementara, dobel sama trigger komen //comment.layout();
+			}
+   			else if(data.substring(0,8) == 'callback') {
+   				var fnstring = data.substring(9);
+   				comment.callback(fnstring);
+			}
+		};
+
+		var rm_polong = function(e) {
+			var data = e.data;
+
+ 			if(data.substring(0,5) == 'login') {
+				mood.layout();
+			}
+ 			else if(data.substring(0,6) == 'height') {
+   				var height = data.split(':')[1];
+				var pol = data.split(':')[2];
+				if (typeof(pol) != 'undefined') {
+					if (pol=='polong') {
+						polong.resize(height);
+					}
+				}
+				else {
+					mood.resize(height);
+				}
+   			}
+		};
+
+    var rm_mood = function(e) {
+			var data = e.data;
+
+ 			if(data.substring(0,5) == 'login') {
+				mood.layout();
+			}
+ 			else if(data.substring(0,6) == 'height') {
+   				var height = data.split(':')[1];
+				var pol = data.split(':')[2];
+				if (typeof(pol) != 'undefined') {
+					if (pol=='polong') {
+						polong.resize(height);
+					}
+				}
+				else {
+					mood.resize(height);
+				}
+   			}
+		};
+
+		var origins = {
+				'https://comment.detik.com' : 'rm_comment',
+				'http://polong.detik.com' : 'rm_polong',
+				'http://mood.detik.com' : 'rm_mood'
+		};
+
+		if (typeof($.receiveMessage) =='undefined') {
+			function receiveMessage(e) {
+				if(e.origin == 'https://comment.detik.com') rm_comment(e);
+				else if(e.origin == 'http://polong.detik.com') rm_polong(e);
+				else if(e.origin == 'https://polong.detik.com') rm_polong(e);
+				else if(e.origin == 'http://mood.detik.com') rm_mood(e);
+				else if(e.origin == 'https://mood.detik.com') rm_mood(e);
+
+				(function(origin){
+					if(origin == 'https://comment.detik.com') return true;
+					else if(origin == 'http://polong.detik.com') return true;
+					else if(origin == 'https://polong.detik.com') return true;
+					else if(origin == 'http://mood.detik.com') return true;
+					else if(origin == 'https://mood.detik.com') return true;
+					return false;
+				})(e.origin);
+
+			}
+			window.addEventListener("message", receiveMessage, false);
+		}
+		else {
+			$.receiveMessage(
+				function(e){
+					if(e.origin == 'https://comment.detik.com') rm_comment(e);
+					else if(e.origin == 'http://polong.detik.com') rm_polong(e);
+					else if(e.origin == 'https://polong.detik.com') rm_polong(e);
+					else if(e.origin == 'http://mood.detik.com') rm_polong(e);
+					else if(e.origin == 'https://mood.detik.com') rm_polong(e);
+				},
+				function(origin){
+					if(origin == 'https://comment.detik.com') return true;
+					else if(origin == 'http://polong.detik.com') return true;
+					else if(origin == 'https://polong.detik.com') return true;
+					else if(origin == 'http://mood.detik.com') return true;
+					else if(origin == 'https://mood.detik.com') return true;
+					return false;
+				}
+				//'http://*.detik.com'
+			);
+		}
+});
