@@ -1,0 +1,21 @@
+﻿@using System;
+@using System.Collections.Generic;
+
+@{
+  ViewBag.Title = "Search ";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<p class="resultInfo">Found @ViewBag.searchCount results</p>
+@{
+  int i;
+  for (i = 0; i < ViewBag.searchCount; i++) {
+    <div class="news-container">
+      <a href=@ViewBag.searchResult[i].newsData.url target="_blank"><div class="news-title">@ViewBag.searchResult[i].newsData.title</div></a>
+      <div class="news-date">@ViewBag.searchResult[i].newsData.date</div>
+      <div class="news-content">@ViewBag.searchResult[i].newsData.content</div>
+    </div>
+    <br />
+  }
+
+}
