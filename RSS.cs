@@ -25,11 +25,28 @@ namespace ConsoleApplication3
             string[] url = new string[dateList.Count];
             string[] date = new string[dateList.Count];
             string[] content = new string[dateList.Count];
-            for (int i = 0; i < dateList.Count; i++)
+            int corrector = 2;
+            string distinct;
+            if (titleList[0].ToString() == "news.detik")
+            {
+                corrector = 2;
+                distinct = "//div[@class='detail_text'][@id='detikdetailtext']";
+            }
+            else if (titleList[0].ToString() == "Tempo.co News Site")
+            {
+                corrector = 2;
+                distinct = "//p";
+            }
+            else if (titleList[0].ToString() == "VIVA.co.id")
+            {
+                corrector = 2;
+                distinct = "//span[@itemprop='description']";
+            }
+            for (int i = 0; i < titleList.Count - corrector; i++)
             {
                 date[i] = dateList[i].InnerXml;
-                title[i] = titleList[i + 2].InnerXml;
-                url[i] = urlList[i + 2].InnerXml;
+                title[i] = titleList[i + corrector].InnerXml;
+                url[i] = urlList[i + corrector].InnerXml;
                 WebClient client = new WebClient();
                 string htmlText = null;
                 try
