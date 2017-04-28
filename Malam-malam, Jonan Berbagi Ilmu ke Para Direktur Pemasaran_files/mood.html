@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!-- saved from url=(0306)https://mood.detik.com/display/datalayer/mood.php#idkanal=3||idnews=3486105||title=Malam-malam%2C%20Jonan%20Berbagi%20Ilmu%20ke%20Para%20Direktur%20Pemasaran||article_url=https%3A%2F%2Ffinance.detik.com%2Fenergi%2F3486105%2F||idsubkanal=1034||idfokus=0||idmicrosite=0||appid=29||ismobile=0||date=27-04-2017 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>Moodrating powered by detikcom</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./jquery.min.1.8.1.js.download"></script>
+
+	<script src="./trigger.js.download"></script>
+	<script src="./jquery.ba-postmessage.js.download"></script>
+    <script>
+	  (function($,sr){
+
+		// debouncing function from John Hann
+		// http://unscriptable.com/index.php/2009/03/20/debouncing-javascript-methods/
+		var debounce = function (func, threshold, execAsap) {
+			var timeout;
+
+			return function debounced () {
+				var obj = this, args = arguments;
+				function delayed () {
+					if (!execAsap)
+						func.apply(obj, args);
+					timeout = null;
+				};
+
+				if (timeout)
+					clearTimeout(timeout);
+				else if (execAsap)
+					func.apply(obj, args);
+
+				timeout = setTimeout(delayed, threshold || 100);
+			};
+		}
+		// smartresize
+		jQuery.fn[sr] = function(fn){  return fn ? this.bind('resize', debounce(fn)) : this.trigger(sr); };
+
+	  })(jQuery,'smartresize');
+	</script>
+    <style type="text/css">
+    	.spinner {
+		  width: 40px;
+		  height: 40px;
+		  margin: 100px auto;
+		  background-color: #333;
+
+		  border-radius: 100%;
+		  -webkit-animation: scaleout 1.0s infinite ease-in-out;
+		  animation: scaleout 1.0s infinite ease-in-out;
+		}
+
+		@-webkit-keyframes scaleout {
+		  0% { -webkit-transform: scale(0.0) }
+		  100% {
+		    -webkit-transform: scale(1.0);
+		    opacity: 0;
+		  }
+		}
+
+		@keyframes scaleout {
+		  0% {
+		    transform: scale(0.0);
+		    -webkit-transform: scale(0.0);
+		  } 100% {
+		    transform: scale(1.0);
+		    -webkit-transform: scale(1.0);
+		    opacity: 0;
+		  }
+		}
+    </style>
+
+    <script>
+		var waitForFinalEvent = (function () {
+		var timers = {};
+		return function (callback, ms, uniqueId) {
+			if (!uniqueId) {
+			  uniqueId = "Don't call this twice without a uniqueId";
+			}
+			if (timers[uniqueId]) {
+			  clearTimeout (timers[uniqueId]);
+			}
+			timers[uniqueId] = setTimeout(callback, ms);
+		  };
+		})();
+		var delay = (function(){
+		var timer = 0;
+		return function(callback, ms){
+			clearTimeout (timer);
+			timer = setTimeout(callback, ms);
+		  };
+		})();
+
+		var hashes = location.hash.split('#')[1];
+		var hashes_ex = hashes.split('||');
+		var idkanal = hashes_ex[0].split('=')[1];
+		var idnews = hashes_ex[1].split('=')[1];
+		var title = hashes_ex[2].split('=')[1];
+		var article_url = hashes_ex[3].split('=')[1];
+		var idsubkanal = hashes_ex[4].split('=')[1];
+		var idfokus = hashes_ex[5].split('=')[1];
+		var idmicrosite	= hashes_ex[6].split('=')[1];
+		var appid = hashes_ex[7].split('=')[1];
+		var ismobile = hashes_ex[8].split('=')[1];
+        var date = hashes_ex[9].split('=')[1];
+    	$(document).ready(function(){
+
+        	mood.init({
+				  idkanal : idkanal,
+				  idnews : idnews,
+				  idsubkanal: idsubkanal,
+				  idfokus: idfokus,
+				  idmicrosite: idmicrosite,
+				  appid : appid,
+				  title : decodeURIComponent(title),
+				  article_url : decodeURIComponent(article_url),
+				  ismobile : ismobile,
+                  date : date
+			});
+			var sr = 0;
+			$(window).resize(function(){
+			  var mbWidth = $('#mood_box').width();
+			  if (mbWidth <= 500) {
+				waitForFinalEvent(function(){
+				  mood.resizeparent();
+				}, 300, "some unique string");
+			  }
+			});
+
+    	});
+
+		function goLogin() {
+			$.postMessage(
+				'login',
+				decodeURIComponent(article_url),
+				parent
+			 );
+		}
+    </script>
+  <link rel="stylesheet" type="text/css" href="./style_2.css" media="all"></head>
+  <body>
+    <div id="mood_box" style="margin: 0 auto; margin-bottom: 25px;"><div class="reaction_"><div class="title"><span class="ask rot">Bagaimana reaksi Anda tentang artikel ini?</span><span class="ico_d rot"><img src="./arrow_down2.png"></span><div class="clearfix"></div></div><div class="title_act inspirasi"></div><div class="clearfix"></div><div class="reaction_1"><a class="tip" data-tip="senang" data-seq="1" style="background: rgb(0, 138, 255);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_1.png"><img class="dua" src="./reaction_1_a.gif"></div></div><span class="info" style="background: rgb(0, 138, 255);">Senang</span><div class="nilai" style="height: 38%; display: block;"></div><div class="nilai2" style="">38%</div></a><a class="tip" data-tip="terhibur" data-seq="2" style="background: rgb(108, 182, 0);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_2.png"><img class="dua" src="./reaction_2_a.gif"></div></div><span class="info" style="background: rgb(108, 182, 0);">Terhibur</span><div class="nilai" style="height: 13%; display: block;"></div><div class="nilai2" style="">13%</div></a><a class="tip" data-tip="inspirasi" data-seq="3" style="background: rgb(30, 140, 0);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_3.png"><img class="dua" src="./reaction_3_a.gif"></div></div><span class="info" style="background: rgb(30, 140, 0);">Terinspirasi</span><div class="nilai" style="height: 50%; display: block;"></div><div class="nilai2" style="">50%</div></a><a class="tip" data-tip="rata" data-seq="4" style="background: rgb(124, 124, 124);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_4.png"><img class="dua" src="./reaction_4_a.gif"></div></div><span class="info" style="background: rgb(124, 124, 124);">Tidak Peduli</span><div class="nilai" style="height: 0%; display: block;"></div><div class="nilai2" style="">0%</div></a><a class="tip" data-tip="ganggu" data-seq="5" style="background: rgb(113, 77, 38);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_5.png"><img class="dua" src="./reaction_5_a.gif"></div></div><span class="info" style="background: rgb(113, 77, 38);">Terganggu</span><div class="nilai" style="height: 0%; display: block;"></div><div class="nilai2" style="">0%</div></a><a class="tip" data-tip="sedih" data-seq="6" style="background: rgb(41, 33, 49);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_6.png"><img class="dua" src="./reaction_6_a.gif"></div></div><span class="info" style="background: rgb(41, 33, 49);">Sedih</span><div class="nilai" style="height: 0%; display: block;"></div><div class="nilai2" style="">0%</div></a><a class="tip" data-tip="takut" data-seq="7" style="background: rgb(234, 156, 0);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_7.png"><img class="dua" src="./reaction_7_a.gif"></div></div><span class="info" style="background: rgb(234, 156, 0);">Takut</span><div class="nilai" style="height: 0%; display: block;"></div><div class="nilai2" style="">0%</div></a><a class="tip" data-tip="marah" data-seq="8" style="background: rgb(231, 15, 28);"><div class="ratio1_1 box_img"><div class="img_con"><img class="satu" src="./reaction_8.png"><img class="dua" src="./reaction_8_a.gif"></div></div><span class="info" style="background: rgb(231, 15, 28);">Marah</span><div class="nilai" style="height: 0%; display: block;"></div><div class="nilai2" style="">0%</div></a></div><div class="clearfix"></div></div></div>
+
+  
+
+
+</body></html>

@@ -1,0 +1,365 @@
+body, html {
+	margin: 0;
+	padding: 0;
+	font: normal 12px "Helvetica", Arial;
+}
+.clearfix {
+	clear: both;
+}
+
+/*s:reaction*/
+.reaction_ {
+    padding: 10px 0;
+    border-top: 1px solid #ccc;
+    margin: 20px 15px 0;
+}
+.reaction_ .title {
+	font-size: 18px;
+	font-weight: bold;
+	padding-bottom: 10px;
+}
+.reaction_ a{
+    float: left;
+    width: 12%;
+    width: calc(12.5% - 2px);
+    margin-right: 2px;
+    text-align: center;
+    padding: 5px 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.4s ease;
+    /*height: 55px;*/
+    text-decoration: none;
+    color: #fff;
+}
+@-webkit-keyframes bar_n
+{
+	0%   {height:0%;}
+}
+.reaction_ .nilai {
+    /*position: absolute;*/
+    /*background: rgba(0,0,0,0.7);*/
+    color: #fff;
+    font-size: 18px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    padding: 5px 0;
+    font-weight: bold;
+	height: 0;
+	/* Chrome, Safari, Opera */
+	-webkit-animation-name:bar_n;
+	-webkit-animation-duration:1s;
+	/* Standard syntax */
+	animation-name:bar_qc;
+	animation-duration:1s;
+	display: none;
+}
+.reaction_ .nilai2 {
+	/*position: absolute;*/
+	top: 100%;
+	width: 100%;
+	text-align: center;
+	font-size: 18px;
+	color: #fff;
+	font-weight: bold;
+	padding: 5px 0 0;
+}
+.reaction_ .info {
+	display: block;
+	text-align: center;
+	font-size: 11px;
+	padding-top: 3px;
+	position: relative;
+	z-index: 2;
+}
+.reaction_ a img {
+    width: 50%;
+    display: inline-block;
+    position: relative;
+	z-index: 2;
+}
+.reaction_ a img.check {
+    width: 20%;
+    position: absolute;
+    right: 5px;
+    display: none;
+}
+.reaction_ a.set img.check {
+	display: block;
+}
+.reaction_ a:hover .info,
+.reaction_ a.selected .info {
+	color: #fff;
+}
+.reaction_ a.selected .nilai2 {
+	display: block;
+}
+
+.reaction_ .senang,
+.reaction_ .senang .nilai,
+.reaction_ .senang .nilai2,
+.title_act.senang,
+.reaction_ .senang .info {
+    background: #179fff;
+}
+
+.reaction_ .terhibur,
+.reaction_ .terhibur .nilai,
+.reaction_ .terhibur .nilai2,
+.title_act.terhibur,
+.reaction_ .terhibur .info {
+    background: #7ac000;
+}
+.reaction_ .inspirasi,
+.reaction_ .inspirasi .nilai,
+.reaction_ .inspirasi .nilai2,
+.title_act.inspirasi,
+.reaction_ .inspirasi .info {
+    background: #1a9b00;
+}
+.reaction_ .rata,
+.reaction_ .rata .nilai,
+.reaction_ .rata .nilai2,
+.title_act.rata,
+.reaction_ .rata .info {
+    background: #8f8f8f;
+}
+.reaction_ .ganggu,
+.reaction_ .ganggu .nilai,
+.reaction_ .ganggu .nilai2,
+.title_act.ganggu,
+.reaction_ .ganggu .info {
+    background: #845f34;
+}
+.reaction_ .sedih,
+.reaction_ .sedih .nilai,
+.reaction_ .sedih .nilai2,
+.title_act.sedih,
+.reaction_ .sedih .info {
+    background: #372D3F;
+}
+.reaction_ .takut,
+.reaction_ .takut .nilai,
+.reaction_ .takut .nilai2,
+.title_act.takut,
+.reaction_ .takut .info {
+    background: #edab1c;
+}
+.reaction_ .marah,
+.reaction_ .marah .nilai,
+.reaction_ .marah .nilai2,
+.title_act.marah,
+.reaction_ .marah .info {
+    background: #ed1c24;
+}
+.reaction_ .terbagi,
+.reaction_ .terbagi .nilai,
+.reaction_ .terbagi .nilai2,
+.title_act.terbagi,
+.reaction_ .terbagi .info{
+    background: #1B3682;
+}
+.reaction_ .nilai {
+	z-index: 1;
+	height: 0%;
+	-webkit-box-sizing: border-box;
+  	-moz-box-sizing: border-box;
+  	box-sizing: border-box;
+}
+.reaction_ a:hover {
+	opacity: 0.8;
+}
+.reaction_ a.selected {
+	opacity: 0.4;
+}
+.reaction_ a.set {
+    opacity: 1;
+}
+/*e:reation*/
+.title_act{
+	display:none;
+	color:#fff;
+	padding:10px;
+	font-size:18px;
+	/*text-transform:uppercase;*/
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.ico_d img{
+	float:right;
+	margin-right:10px;
+	width:20px;
+	height:20px;
+	display:none;
+	margin-top:4%;
+}
+.rot img{
+	float:right;
+	display:none;
+	margin-right:10px;
+	width:20px;
+	height:20px;
+	-webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+/*e:reation*/
+@media screen and (max-width: 500px){
+	.reaction_ {
+		margin: 0 !important;
+		border-top: 0 !important;
+	}
+	.reaction_ .title {
+		border-bottom:solid 1px #ccc;
+		margin-bottom:10px;
+	}
+	.title .ask{
+		float:left;
+		width:80%;
+	}
+	.reaction_ a {
+		width: 24%;
+		width: calc(25% - 2px);
+		margin-bottom: 2px;
+	}
+	.reaction_1{
+		display:block;
+	}
+	.ico_d img{
+		display:block;
+	}
+	.rot img{
+		display:block;
+	}
+	.title_act {
+		font-size: 15px;
+		text-transform: capitalize;
+	}
+
+}
+/*e:widget detail*/
+
+
+.reaction_ a {
+	overflow: hidden;
+	text-align: center;
+	padding-top: 0;
+}
+.reaction_ a img {
+	margin-top: 5px;
+}
+.reaction_ a .satu {
+	text-align: center;
+}
+.reaction_ a.selected {
+	position: relative;
+}
+.reaction_ a.pilih {
+	position: relative;
+	-webkit-box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow:    0px 0px 0px 2px rgba(0, 0, 0, 0.4);
+	box-shadow:         0px 0px 0px 2px rgba(0, 0, 0, 0.4);
+
+}
+/*.reaction_ a.selected .satu {
+	width: 70%;
+	padding-top: 9px;
+	padding-bottom: 8px;
+}*/
+.reaction_ .box_img{
+	display: inline-block;
+	position:  relative;
+	width: 100px;
+	padding: 0;
+}
+.reaction_ .box_img:before{
+	content: "";
+	display: block;
+	padding-top: 100%; /* initial ratio of 1:1*/
+}
+.reaction_ .img_con{
+	/* Positioning */
+	position:  absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+
+	/* Styling */
+	background: none;
+	text-align: center;
+	vertical-align: center;
+	text-transform: uppercase;
+	color: #fff;
+	overflow: hidden;
+	padding: 0;
+}
+.reaction_ .img_con img {
+	width: 100%;
+}
+.reaction_ .img_con span{
+	font-weight: bold;
+	font-size: 3em;
+	display: block;
+}
+.reaction_ .box_img {
+	top: 0;
+	width: 100%;
+	z-index: 1;
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+	background: #eaeaea;
+}
+.reaction_ .box_img img {
+	width: 90%;
+	width: calc(100% - 20px);
+	padding: 5px 10px;
+	height: auto;
+	display: block;
+}
+.reaction_ .box_img .dua {
+	background: #f6f6f6;
+	display: block;
+	width: 100%;
+	padding: 0;
+	display: none;
+	margin: 0;
+}
+.reaction_ a .check {
+	position: absolute;
+	top: 5px;
+	right: 0;
+}
+.reaction_ a .nilai2 {
+	position: relative;
+	z-index: 2;
+}
+.reaction_ a .info {
+	width: 100%;
+	padding: 5px 0 0;
+	text-align: center;
+	position: relative;
+	margin-top: -13px;
+	font-weight: bold;
+}
+.reaction_ .nilai2 {
+	padding-top: 0;
+}
+.reaction_ a.selected .info {
+	margin-top: 0;
+}
+.reaction_ a.selected .box_img img {
+	padding: 5px;
+	width: 90%;
+}
+.reaction_ a.pilih .box_img img {
+	padding: 0;
+	width: 100%;
+}
+.reaction_ .title_act {
+	text-transform: none;
+}
