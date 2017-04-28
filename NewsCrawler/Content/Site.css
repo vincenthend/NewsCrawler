@@ -118,3 +118,14 @@ textarea {
 .resultInfo{
     color:#808080;
 }
+
+.news-title{
+  font-size:24px;
+  color:#aaaaaa;
+}
+
+.news-date{
+  font-size:10px;
+  color:darkgray;
+  font-style:italic;
+}

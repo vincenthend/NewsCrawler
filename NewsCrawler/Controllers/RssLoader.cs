@@ -5,10 +5,14 @@ using System.Xml;
 using System.Net;
 using HtmlAgilityPack;
 using System.Linq;
+using System.Text;
+using System;
+using System.Data.Entity.Validation;
+using Microsoft.Ajax.Utilities;
 
 namespace NewsCrawler.Controllers {
   public class Loader {
-    public static void loadRSS(string url, NewsCrawlerDB db, MySqlConnection connection, string contentPlaceholder) {
+    public static void loadRSS(string url, NewsCrawlerDB db) {
       //Create the XmlDocument.
       XmlDocument doc = new XmlDocument();
       doc.Load(url);
@@ -18,37 +22,42 @@ namespace NewsCrawler.Controllers {
       XmlNodeList contentList = doc.GetElementsByTagName("description");
       XmlNodeList dateList = doc.GetElementsByTagName("pubDate");
 
-      MySqlTransaction transaction = connection.BeginTransaction();
-      try {
-        db.Database.UseTransaction(transaction);
 
-        List<News> news = new List<News>();
-        int titleoff = titleList.Count - linkList.Count;
-        int contentoff = contentList.Count - linkList.Count;
+      List<News> news = new List<News>();
+      int titleoff = titleList.Count - linkList.Count;
+      int contentoff = contentList.Count - linkList.Count;
 
-        string[] content = new string[contentList.Count - contentoff];
+      string[] content = new string[contentList.Count - contentoff];
 
-        HtmlWeb web;
-        HtmlDocument docs;
+      for (int i = 0; i < linkList.Count; i++) {
+        WebClient client = new WebClient();
+        string htmlText = null;
 
-        for (int i = 0; i < linkList.Count; i++) {
-          web = new HtmlWeb();
-          docs = web.Load(linkList[i].InnerXml);
-          HtmlNode[] findclasses = docs.DocumentNode.Descendants().Where(d => d.Attributes.Contains("class") && d.Attributes.Contains(contentPlaceholder)).ToArray();
+        htmlText = client.DownloadString(linkList[i].InnerText);
 
-          news.Add(new News { url = linkList[i].InnerXml, title = titleList[i + titleoff].InnerXml, content = findclasses[0].InnerText, date = dateList[i].InnerXml });
+        if (htmlText != null) {
+          HtmlDocument htmlDoc = new HtmlDocument();
+          htmlDoc.LoadHtml(htmlText);
+          var nodes = htmlDoc.DocumentNode.SelectNodes("//p");
+          StringBuilder sb = new StringBuilder();
+          if (nodes != null) {
+            foreach (var item in nodes) {
+              string text = item.OuterHtml;
+              if (!string.IsNullOrEmpty(text)) {
+                sb.AppendLine(text.Trim());
+              }
+            }
+          }
+          content[i] = sb.ToString();
         }
 
-        db.News.AddRange(news);
+        news.Add(new News { url = linkList[i].InnerXml, title = titleList[i + titleoff].InnerXml, content = content[i], date = dateList[i].InnerXml });
         db.SaveChanges();
+      }
+      db.News.AddRange(news);
+      db.SaveChanges();
 
 
-        transaction.Commit();
-      }
-      catch {
-        transaction.Rollback();
-      }
     }
-
   }
 }

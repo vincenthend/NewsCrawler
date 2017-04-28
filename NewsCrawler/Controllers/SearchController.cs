@@ -20,7 +20,6 @@ namespace NewsCrawler.Controllers {
     * @return List berita yang lolos search dengan lokasi ditemukannya
     */
     public ActionResult Index(string searchQuery, int searchType) {
-      int i;
       DbConfiguration.SetConfiguration(new MySqlEFConfiguration());
       String connectionString = "server=127.0.0.1;User Id=root;password=password;database=db_newscrawler";
       MySqlConnection connection = new MySqlConnection(connectionString);
@@ -30,17 +29,18 @@ namespace NewsCrawler.Controllers {
 
       connection.Open();
 
-      // Check meta, update if last update > 1 hours
-      RSSData[] rssArray = dbNews.rssDB.SqlQuery("select * from rssdata").ToArray();
-
-      for (i = 0; i < rssArray.Length; i++) {
-        Loader.loadRSS(rssArray[i].url, dbNews, connection,rssArray[i].contentPlaceholder);
-      }
-
       // Empty tables
-      dbNews.News.SqlQuery("delete * from News");
+      MySqlCommand cmd = new MySqlCommand("delete from News", connection);
+      cmd.ExecuteNonQuery();
+      dbNews.SaveChanges();
 
+      MySqlTransaction transaction = connection.BeginTransaction();
+      dbNews.Database.UseTransaction(transaction);
       // Get data from RSS
+      Loader.loadRSS("http://rss.detik.com/index.php/detikcom", dbNews);
+      Loader.loadRSS("http://tempo.co/rss/terkini", dbNews);
+      Loader.loadRSS("http://rss.vivanews.com/get/all", dbNews);
+      transaction.Commit();
 
       // Convert news list to array
       News[] newsArray = dbNews.News.SqlQuery("select * from News").ToArray();
@@ -91,11 +91,22 @@ namespace NewsCrawler.Controllers {
           Searcher.KMPSearchFirst(newsList[i].content, searchQuery);
           if (foundLoc != -1) {
             // Found in description
+            if (newsList[i].content.Length >= 50 + foundLoc) {
+              newsList[i].content = newsList[i].content.Substring(foundLoc, 49) + "...";
+            }
+            else {
+              newsList[i].content = newsList[i].content.Substring(foundLoc);
+            }
+
             foundList.Add(new NewsFound(newsList[i], foundLoc, false));
           }
         }
         else {
           // Found in title
+          if (newsList[i].content.Length >= 50) {
+            newsList[i].content = newsList[i].content.Substring(0, 49) + "...";
+          }
+
           foundList.Add(new NewsFound(newsList[i], foundLoc, true));
         }
       }
@@ -124,11 +135,20 @@ namespace NewsCrawler.Controllers {
           Searcher.BMSearchFirst(newsList[i].content, searchQuery);
           if (foundLoc != -1) {
             // Found in description
+            if (newsList[i].content.Length >= 50 + foundLoc) {
+              newsList[i].content = newsList[i].content.Substring(foundLoc, 49) + "...";
+            }
+            else {
+              newsList[i].content = newsList[i].content.Substring(foundLoc);
+            }
             foundList.Add(new NewsFound(newsList[i], foundLoc, false));
           }
         }
         else {
           // Found in Title
+          if (newsList[i].content.Length >= 50) {
+            newsList[i].content = newsList[i].content.Substring(0, 49) + "...";
+          }
           foundList.Add(new NewsFound(newsList[i], foundLoc, true));
         }
       }
@@ -158,11 +178,20 @@ namespace NewsCrawler.Controllers {
           if (foundLoc != -1) {
             // Found in description
             foundList.Add(new NewsFound(newsList[i], foundLoc, false));
+            if (newsList[i].content.Length >= 50 + foundLoc) {
+              newsList[i].content = newsList[i].content.Substring(foundLoc, 49) + "...";
+            }
+            else {
+              newsList[i].content = newsList[i].content.Substring(foundLoc);
+            }
           }
         }
         else {
           // Found in Title
           foundList.Add(new NewsFound(newsList[i], foundLoc, true));
+          if (newsList[i].content.Length >= 50) {
+            newsList[i].content = newsList[i].content.Substring(0, 49) + "...";
+          }
         }
       }
 

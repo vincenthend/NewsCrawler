@@ -11,6 +11,7 @@ namespace NewsCrawler.Models {
   public class News {
     [Key]
     [Column("url")]
+    [MaxLength(256)]
     public String url { get; set; }
     public String title { get; set; }    
     public String date { get; set; }
