@@ -26,7 +26,7 @@ namespace ConsoleApplication3
             string[] date = new string[dateList.Count];
             string[] content = new string[dateList.Count];
             int corrector = 2;
-            string distinct;
+            string distinct = "//p";
             if (titleList[0].ToString() == "news.detik")
             {
                 corrector = 2;
@@ -61,7 +61,7 @@ namespace ConsoleApplication3
                 {
                     HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
                     htmlDoc.LoadHtml(htmlText);
-                    var nodes = htmlDoc.DocumentNode.SelectNodes("//p");
+                    var nodes = htmlDoc.DocumentNode.SelectNodes(distinct);
                     StringBuilder sb = new StringBuilder();
                     if (nodes != null)
                     {
